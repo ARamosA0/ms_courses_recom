@@ -1,0 +1,222 @@
+version: "3.4"
+services:
+  
+  #EventBroker con kafka
+  #Zookeeper
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://zookeeper:2181,OUTSIDE://localhost:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:2181,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+
+
+  #APIGATEWAY en Express.js
+  #puerto 6000
+  apigateway:
+    build: ./api_gateway
+    entrypoint: nodemon --inspect=0.0.0.0 server.jsd
+    depends_on:
+      - kafka
+    volumes:
+      - ./api_gateway:/usr/local/app
+    ports:
+      - "6000:80"
+      - "127.0.0.1:9229:9229"
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - frontend
+      - back-process
+      - back-tier-cursos
+      - back-tier-usuarios
+
+  # Frontend en React y vite
+  # puerto 3000
+  frontend:
+    build: ./frontend
+    depends_on:
+      apigateway:
+        condition: service_healthy
+    ports: 
+      - "3000:3000"
+    volumes:
+      - ./frontend:/frontend
+      - exclude:/frontend/node_modules/
+    networks:
+        - frontend
+
+  #SERVICIO para recolectar data del EventBroker
+  #y guardarla en REDIS para su procesado
+  #en dotnet
+  collect:
+    build: ./collect
+    depends_on:
+      - kafka
+      - apigateway
+    volumes:
+      - ./collect:/usr/local/app
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+        - back-process
+
+  #SERVICIO para el procesamiento de data
+  #en python
+  #puerto 5000
+  procesing:
+    build: 
+      context: ./procesing
+      target: dev
+    depends_on:
+      - kafka
+      - apigateway
+    healthcheck: 
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "5000:80"
+    environment:
+      KAFKA_BROKER: kafka:9092
+    volumes:
+      - ./procesing:/procesing
+    networks:
+        - back-process
+
+  #SERVICIO para crud de cursos 
+  #en python
+  #puerto 5001
+  cursos:
+    build: 
+      context: ./cursos
+      target: dev
+    depends_on:
+      - kafka
+      - apigateway
+      - db-cursos
+    healthcheck: 
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "5001:81"
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+          - back-tier-cursos 
+
+  #SERVICIO para crud de usuarios
+  #en python
+  #puerto 5002
+  usuarios:
+    build: 
+      context: ./usuarios
+      target: dev
+    depends_on:
+      - kafka
+      - apigateway
+      - db-usuarios
+    healthcheck: 
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "5002:82"
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+          - back-tier-usuarios
+
+  #BD de Usuarios en PostgreSQL
+  db-usuarios:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_NAME: "postgres-usuarios"
+      POSTGRES_USER: "postgres-usuarios"
+      POSTGRES_PASSWORD: "postgres-usuarios"
+    volumes:
+      - "db-data-usuarios:/var/lib/postgresql/data"
+      - "./healthchecks:/healthchecks"
+    healthcheck:
+      test: /healthchecks/postgres.sh
+      interval: "5s"
+    networks:
+      - back-tier-usuarios
+
+  #BD de Cursos en PostgreSQL
+  db-cursos:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_NAME: "postgres-cursos"
+      POSTGRES_USER: "postgres-cursos"
+      POSTGRES_PASSWORD: "postgres-cursos"
+    volumes:
+      - "db-data-cursos:/var/lib/postgresql/data"
+      - "./healthchecks:/healthchecks"
+    healthcheck:
+      test: /healthchecks/postgres.sh
+      interval: "5s"
+    networks:
+      - back-tier-cursos
+  
+  redis-collect:
+    image: redis:alpine
+    volumes:
+      - "./healthchecks:/healthchecks"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: /healthchecks/redis.sh
+      interval: "5s"
+    networks:
+      - back-process
+
+  redis-process:
+    image: redis:alpine
+    volumes:
+      - "./healthchecks:/healthchecks"
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: /healthchecks/redis.sh
+      interval: "5s"
+    networks:
+      - back-process
+
+volumes:
+  exclude:
+  db-data-cursos:
+  db-data-usuarios:
+
+networks:
+  frontend:
+  back-tier-usuarios:
+  back-tier-cursos:
+  back-process:
