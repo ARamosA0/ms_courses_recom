@@ -12,7 +12,7 @@ RUN npm install -g npm@10.2.4
 
 RUN npm ci && \
  npm cache clean --force && \
- mv /fronten/node_modules /node_modules
+ mv /frontend/node_modules /node_modules
 
 COPY . .
 

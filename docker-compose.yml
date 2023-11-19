@@ -3,46 +3,65 @@ services:
   
   #EventBroker con kafka
   #Zookeeper
-  zookeeper:
-    image: wurstmeister/zookeeper:latest
-    ports:
-      - "2181:2181"
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://zookeeper:2181,OUTSIDE://localhost:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:2181,OUTSIDE://0.0.0.0:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+  # zookeeper:
+  #   image: wurstmeister/zookeeper:latest
+  #   ports:
+  #     - "2181:2181"
+  #   environment:
+  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://zookeeper:2181,OUTSIDE://localhost:2181
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:2181,OUTSIDE://0.0.0.0:9092
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #
+  # kafka:
+  #   image: wurstmeister/kafka:latest
+  #   ports:
+  #     - "9092:9092"
+  #   environment:
+  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9092
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - zookeeper
 
-  kafka:
-    image: wurstmeister/kafka:latest
-    ports:
-      - "9092:9092"
+  zookeeper:
+    image: confluentinc/cp-zookeeper
     environment:
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  
+  kafka:
+    image: confluentinc/cp-kafka  
     depends_on:
       - zookeeper
-
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   #APIGATEWAY en Express.js
-  #puerto 6000
+  #puerto 9090
   apigateway:
     build: ./api_gateway
-    entrypoint: nodemon --inspect=0.0.0.0 server.jsd
     depends_on:
       - kafka
     volumes:
       - ./api_gateway:/usr/local/app
     ports:
-      - "6000:80"
-      - "127.0.0.1:9229:9229"
+      - "9090:9090"
     environment:
       KAFKA_BROKER: kafka:9092
     networks:
@@ -55,9 +74,6 @@ services:
   # puerto 3000
   frontend:
     build: ./frontend
-    depends_on:
-      apigateway:
-        condition: service_healthy
     ports: 
       - "3000:3000"
     volumes:
@@ -87,7 +103,6 @@ services:
   procesing:
     build: 
       context: ./procesing
-      target: dev
     depends_on:
       - kafka
       - apigateway
@@ -104,7 +119,7 @@ services:
     volumes:
       - ./procesing:/procesing
     networks:
-        - back-process
+      - back-process
 
   #SERVICIO para crud de cursos 
   #en python
@@ -112,7 +127,6 @@ services:
   cursos:
     build: 
       context: ./cursos
-      target: dev
     depends_on:
       - kafka
       - apigateway
@@ -128,7 +142,7 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     networks:
-          - back-tier-cursos 
+      - back-tier-cursos 
 
   #SERVICIO para crud de usuarios
   #en python
@@ -136,7 +150,6 @@ services:
   usuarios:
     build: 
       context: ./usuarios
-      target: dev
     depends_on:
       - kafka
       - apigateway
@@ -152,7 +165,7 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     networks:
-          - back-tier-usuarios
+      - back-tier-usuarios
 
   #BD de Usuarios en PostgreSQL
   db-usuarios:
@@ -164,6 +177,8 @@ services:
     volumes:
       - "db-data-usuarios:/var/lib/postgresql/data"
       - "./healthchecks:/healthchecks"
+    ports:
+      - "5432:5432"
     healthcheck:
       test: /healthchecks/postgres.sh
       interval: "5s"
@@ -180,6 +195,8 @@ services:
     volumes:
       - "db-data-cursos:/var/lib/postgresql/data"
       - "./healthchecks:/healthchecks"
+    ports:
+      - "5433:5432"
     healthcheck:
       test: /healthchecks/postgres.sh
       interval: "5s"

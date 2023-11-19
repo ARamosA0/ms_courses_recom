@@ -6,7 +6,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the application directory
-WORKDIR /usr/local/app
+WORKDIR /procesing
 
 # Install our requirements.txt
 COPY requirements.txt ./requirements.txt
