@@ -1,0 +1,17 @@
+# a very minimal declarative config file
+_format_version: "2.1"
+_transform: true
+
+services:
+ - name: cursos
+   url: http://localhost:5001
+   routes:
+    - name: cursos_routes
+      paths:
+         - /cursos
+- name: usuarios
+  url: http://localhost:5002
+  routes:
+    - name: usuarios_routes
+      paths:
+        - /usuarios

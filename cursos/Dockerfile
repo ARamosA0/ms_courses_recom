@@ -6,9 +6,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the application directory
-WORKDIR /cursos
+WORKDIR /usr/local/app
 
 # Install our requirements.txt
+
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
