@@ -204,7 +204,7 @@ services:
       - "5001:81"
     environment:
       KAFKA_BROKER: kafka:9092
-    hostname: cursos
+      DATABASE_URL: postgresql://postgres-cursos:postgres-cursos@db-cursos:5432/postgres-cursos
     volumes:
       - ./cursos:/usr/local/app
     networks:
@@ -231,6 +231,7 @@ services:
       - "5002:82"
     environment:
       KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     networks:
       - back-tier-usuarios
       - kong-net 
@@ -241,6 +242,7 @@ services:
   db-usuarios:
     image: postgres:15-alpine
     environment:
+      POSTGRES_DB: "postgres-usuarios"
       POSTGRES_NAME: "postgres-usuarios"
       POSTGRES_USER: "postgres-usuarios"
       POSTGRES_PASSWORD: "postgres-usuarios"
@@ -259,6 +261,7 @@ services:
   db-cursos:
     image: postgres:15-alpine
     environment:
+      POSTGRES_DB: "postgres-cursos"
       POSTGRES_NAME: "postgres-cursos"
       POSTGRES_USER: "postgres-cursos"
       POSTGRES_PASSWORD: "postgres-cursos"
