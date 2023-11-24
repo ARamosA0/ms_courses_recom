@@ -36,6 +36,7 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["collect.csproj", "."]
 RUN dotnet restore "./collect.csproj"
+RUN dotnet add package Confluent.Kafka
 COPY . .
 WORKDIR "/src/."
 RUN dotnet build "collect.csproj" -c Release -o /app/build
