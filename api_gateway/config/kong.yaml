@@ -15,3 +15,7 @@ services:
     - name: usuarios_routes
       paths:
         - /usuarios
+
+plugins:
+  - kafka-upstream
+  - kafka-logs
