@@ -121,6 +121,30 @@ def create_usuario_cuenta():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+# Cursos usuarios general
+@app.route('/cursos_usuario', methods=['GET'])
+def get_cursos_usuario():
+    try:
+        # Verifica si se proporciona un parámetro de filtro en la solicitud
+        usuario_id = request.args.get('usuario_id')
+        if usuario_id:
+            cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
+        else:
+            cursos_usuario = CursoUsuario.query.all()
+
+        cursos_list = []
+        for curso_usuario in cursos_usuario:
+            cursos_list.append({
+                'curso_usuario_id': curso_usuario.curso_usuario_id,
+                'curso_id': curso_usuario.curso_id,
+                'usuario_id': curso_usuario.usuario_id,
+                'puntuacion': curso_usuario.puntuacion
+            })
+        return jsonify({'cursos_usuario': cursos_list})
+    except SQLAlchemyError as e:
+        return jsonify({'error': str(e)}), 500
+
+# Traer cursos de un usuario
 @app.route('/curso_usuario/<int:usuario_id>', methods=['GET'])
 def get_cursos_usuario(usuario_id):
     try:
