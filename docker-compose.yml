@@ -154,7 +154,9 @@ services:
     depends_on:
       - kafka
     volumes:
-      - ./collect:/usr/local/app
+      - ./collect:/collect
+    ports:
+      - "6000:80"
     environment:
       KAFKA_BROKER: kafka:9092
     networks:
