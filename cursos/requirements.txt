@@ -5,3 +5,5 @@ flask-cors
 confluent_kafka
 Flask-SQLAlchemy
 psycopg2-binary
+pykafka
+kafka

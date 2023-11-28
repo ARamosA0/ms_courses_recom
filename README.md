@@ -46,7 +46,7 @@ Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reempla
     "name":"loadbalancer_upstream"
     }
 }
-- **IMPORTANTE** Cambiar el puerto con 5001, 5002 
+- **IMPORTANTE** Cambiar el puerto con 5001, 5002 al crear tres targets 
 - {http://localhost:8001/upstreams/loadbalancer_upstream/targets}
 - {
     {
@@ -60,7 +60,7 @@ Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reempla
 - {
     {
     "name":"usuarios",
-    "url": "http://*IP*:5001",
+    "url": "http://*IP*:5000",
     "host":"loadbalancer_upstream"
     }
 }
@@ -68,7 +68,7 @@ Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reempla
 - {
     {
     "name":"cursos",
-    "url": "http://*IP*:5002",
+    "url": "http://*IP*:5001",
     "host":"loadbalancer_upstream"
     }
 }
@@ -76,7 +76,7 @@ Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reempla
 - {
     {
     "name":"procesar",
-    "url": "http://*IP*:5000",
+    "url": "http://*IP*:5002",
     "host":"loadbalancer_upstream"
     }
 }
@@ -94,13 +94,29 @@ Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reempla
     "paths":["/cursos"]
     }   
 }
-- {http://localhost:8001/services/procesar/routes}
-- {
+- ```http://localhost:8001/services/procesar/routes```
+- ```
     {
     "name":"procesar-route",
     "paths":["/procesar"]
     }   
-}
+```
 
 
+## KAFKA
 
+Para crear topics entrar en el contenedor de docker con el siguiente comando
+
+```docker exec -it [container_id] /bin/bash```
+
+Una vez dentro copiar el siguiente comando 
+
+```kafka-topics --create --bootstrap-server localhost:29092 --partitions 2 --replication-factor 1 --topic [nombre_del_topic]```
+
+o
+
+```docker exec -it [container_id] kafka-topics --create --bootstrap-server localhost:29092 --partitions 2 --replication-factor 1 --topic [nombre_del_topic]````
+
+Para ver los topics 
+
+```kafka-topics --list --bootstrap-server localhost:29092 ```

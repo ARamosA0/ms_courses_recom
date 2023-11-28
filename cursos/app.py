@@ -8,6 +8,42 @@ import socket
 import json
 import logging
 
+# ##### Funciones de KAFKA #####
+
+import confluent_kafka as ck
+
+admin_conf = {
+    'bootstrap.servers': 'localhost:29092'  
+}
+
+def producer(producer_conf, topic, message):
+    producer = ck.Producer(producer_conf)
+
+    def delivery_report(err, msg):
+        if err is not None:
+            print(f'Error al enviar mensaje: {err}')
+        else:
+            print(f'Mensaje enviado: {msg.value().decode("utf-8")}')
+
+    producer.produce(topic, value=message, callback=delivery_report())
+    producer.flush
+
+def consumer(consumer_conf, topic, message, delivery_report):
+    consumer = ck.Consumer(consumer_conf)
+    consumer.subscribe([topic])
+    while True:
+        msg = consumer.poll(1.0)
+        if msg is None:
+            continue
+        if msg.error():
+            print(f'Error al recibir mensaje: {msg.error()}')
+        else:
+            print(f'Mensaje recibido: {msg.key().decode("utf-8")}, Valor: {msg.value().decode("utf-8")}')
+
+
+# ##### Funciones de KAFKA #####
+
+
 hostname = socket.gethostname()
 
 app = Flask(__name__)
@@ -39,6 +75,8 @@ def get_redis():
         # cambiar el puerto por 6380 para conectarse al otro redis
         g.redis = Redis(host="redis", port=6379, db=0, socket_timeout=5)
     return g.redis
+
+
 
 # It's working?
 @app.route("/", methods=['POST', 'GET'])

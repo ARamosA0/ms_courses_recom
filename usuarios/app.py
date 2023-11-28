@@ -8,6 +8,9 @@ import socket
 import random
 import json
 import logging
+import socket
+import time
+
 
 hostname = socket.gethostname()
 
@@ -59,11 +62,23 @@ with app.app_context():
     db.create_all()
 
 
-def get_redis():
+def get_redis_broker():
     if not hasattr(g, 'redis'):
         #cambiar el puerto por 6380 para comectarce al otro redis
-        g.redis = Redis(host="redis", port=6379, db=0, socket_timeout=5)
+        # Este redis es el broker
+        g.redis = Redis(host='redis-collect', port=6379, db=0, socket_timeout=5)
     return g.redis
+
+# def get_redis(host, db):
+#     if not hasattr(g, 'redis'):
+#         g.redis = {}
+#     
+#     key = f"{host}_{db}"
+#     if key not in g.redis:
+#         g.redis[key] = Redis(host=host, db=db, socket_timeout=5)
+#     
+#     return g.redis[key]
+
 
 # It's working?
 @app.route("/", methods=['POST', 'GET'])
@@ -74,10 +89,14 @@ def hello():
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
     try:
+        redis = get_redis('redis-collect', 0)
         usuarios = Usuario.query.all()
         usuarios_list = []
         for usuario in usuarios:
             usuarios_list.append(usuario.json())
+
+        # redis.rpush('getUsuario', )
+
         return jsonify({'usuarios': usuarios_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
@@ -124,6 +143,7 @@ def create_usuario_cuenta():
 @app.route('/curso_usuario/<int:usuario_id>', methods=['GET'])
 def get_cursos_usuario(usuario_id):
     try:
+        redis = get_redis_broker()
         cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
         cursos_list = []
         for curso_usuario in cursos_usuario:
@@ -132,7 +152,11 @@ def get_cursos_usuario(usuario_id):
                 'curso_id': curso_usuario.curso_id,
                 'puntuacion': curso_usuario.puntuacion
             })
-        return jsonify({'cursos_usuario': cursos_list})
+        cursos = json.dumps(cursos_list)
+        redis.set('getUsuario', cursos)
+        print(cursos_list)
+        print("cursos Listt")
+        return cursos
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
 

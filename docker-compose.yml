@@ -4,53 +4,118 @@ services:
   #EventBroker con kafka
   #Zookeeper
   # zookeeper:
-  #   image: wurstmeister/zookeeper:latest
+  #   image: zookeeper:3.4.9
+  #   hostname: zookeeper
+  #   ulimits:
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
   #   ports:
   #     - "2181:2181"
   #   environment:
-  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://zookeeper:2181,OUTSIDE://localhost:2181
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:2181,OUTSIDE://0.0.0.0:9092
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+  #     ZOO_MY_ID: 1
+  #     ZOO_PORT: 2181
+  #     ZOO_SERVERS: server.1=zookeeper:2888:3888
   #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./data/zookeeper/data:/data
+  #     - ./data/zookeeper/datalog:/datalog
   #
   # kafka:
-  #   image: wurstmeister/kafka:latest
+  #   image: confluentinc/cp-kafka:5.3.0
+  #   hostname: kafka
+  #   ulimits:
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
+  #   ports:
+  #     - "9091:9091"
+  #   environment:
+  #     KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+  #     KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   volumes:
+  #     - ./data/kafka1/data:/var/lib/kafka/data
+  #   depends_on:
+  #     - zookeeper
+  #
+  # kafka2:
+  #   image: confluentinc/cp-kafka:5.3.0
+  #   hostname: kafka2
+  #   ulimits:
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
   #   ports:
   #     - "9092:9092"
   #   environment:
-  #     KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-  #     KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9092
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+  #     KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
   #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_BROKER_ID: 2
   #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./data/kafka2/data:/var/lib/kafka/data
+  #   depends_on:
+  #     - zookeeper 
+  # kafka3:
+  #   image: confluentinc/cp-kafka:5.3.0
+  #   hostname: kafka3
+  #   ulimits:
+  #     nofile:
+  #       soft: 65536
+  #       hard: 65536
+  #   ports:
+  #     - "9093:9093"
+  #   environment:
+  #     KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka3:19093,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9093
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+  #     KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+  #     KAFKA_BROKER_ID: 3
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   volumes:
+  #     - ./data/kafka3/data:/var/lib/kafka/data
   #   depends_on:
   #     - zookeeper
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
-  
-  kafka:
-    image: confluentinc/cp-kafka  
-    depends_on:
-      - zookeeper
-    ports:
-      - 29092:29092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper
+  #   hostname: zookeeper
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - 22181:2181
+  #     - 1234:1234
+  #   environment:
+  #     ZOOKEEPER_SERVER_ID: 1
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #     ZOOKEEPER_INIT_LIMIT: 5
+  #     ZOOKEEPER_SYNC_LIMIT: 2
+  #     ZOOKEEPER_SERVERS: zookeeper:22888:23888
+  #   networks:
+  #       - kafka 
+  #
+  # 
+  # kafka:
+  #   image: confluentinc/cp-kafka  
+  #   hostname: kafka
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - 29092:29092
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   networks:
+  #       - kafka 
 
   #APIGATEWAY en Express.js
   #puerto 9090
@@ -70,6 +135,8 @@ services:
   #     - back-tier-cursos
   #     - back-tier-usuarios
   
+  #BROKER 
+  #
   
   
   #KONG
@@ -151,8 +218,8 @@ services:
   #en dotnet
   collect:
     build: ./collect
-    depends_on:
-      - kafka
+    # depends_on:
+      # - kafka
     volumes:
       - ./collect:/collect
     ports:
@@ -162,6 +229,8 @@ services:
     networks:
       - back-process
       - kong-net
+      # - kafka
+
 
   #SERVICIO para el procesamiento de data
   #en python
@@ -169,8 +238,10 @@ services:
   procesing:
     build: 
       context: ./procesing
+      target: dev
     depends_on:
-      - kafka
+      # - kafka
+      - redis-collect
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
@@ -178,7 +249,7 @@ services:
       retries: 3
       start_period: 10s
     ports:
-      - "5000:80"
+      - "5000:83"
     environment:
       KAFKA_BROKER: kafka:9092
     volumes:
@@ -186,6 +257,8 @@ services:
     networks:
       - back-process
       - kong-net
+      - broker
+      # - kafka
 
   #SERVICIO para crud de cursos 
   #en python
@@ -193,9 +266,11 @@ services:
   cursos:
     build: 
       context: ./cursos
+      target: dev
     depends_on:
-      - kafka
+      # - kafka
       - db-cursos
+      - redis-collect
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
@@ -212,6 +287,8 @@ services:
     networks:
       - back-tier-cursos 
       - kong-net
+      - broker
+      # - kafka
     
 
   #SERVICIO para crud de usuarios
@@ -220,9 +297,11 @@ services:
   usuarios:
     build: 
       context: ./usuarios
+      target: dev   
     depends_on:
-      - kafka
+      # - kafka
       - db-usuarios
+      - redis-collect
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
@@ -237,6 +316,7 @@ services:
     networks:
       - back-tier-usuarios
       - kong-net 
+      - broker
     volumes:
       - ./usuarios:/usr/local/app
 
@@ -277,7 +357,8 @@ services:
       interval: "5s"
     networks:
       - back-tier-cursos
-  
+
+  # Este REDIS se usara como broker momentaneo
   redis-collect:
     image: redis:alpine
     volumes:
@@ -289,6 +370,7 @@ services:
       interval: "5s"
     networks:
       - back-process
+      - broker
 
   redis-process:
     image: redis:alpine
@@ -316,4 +398,6 @@ networks:
   back-tier-cursos:
   back-process:
   kong-net:
+  broker:
+  # kafka:
 
