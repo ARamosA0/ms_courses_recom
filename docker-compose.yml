@@ -30,27 +30,27 @@ services:
   #   depends_on:
   #     - zookeeper
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
+ # zookeeper:
+#    image: confluentinc/cp-zookeeper
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    ports:
+#      - 22181:2181
   
-  kafka:
-    image: confluentinc/cp-kafka  
-    depends_on:
-      - zookeeper
-    ports:
-      - 29092:29092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#  kafka:
+#    image: confluentinc/cp-kafka  
+#    depends_on:
+#      - zookeeper
+#    ports:
+#      - 29092:29092
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   #APIGATEWAY en Express.js
   #puerto 9090
@@ -72,118 +72,118 @@ services:
   
   
   
-  #KONG
-  postgres:
-    image: postgres:9.6-alpine
-    restart: always
-    hostname: kong-database
-    container_name: kong-database
-    environment:
-      POSTGRES_USER: "kong"
-      POSTGRES_DB: "kong"
-      POSTGRES_PASSWORD: "kong"
-    ports:
-      - "5440:5432"
-    networks:
-      - kong-net
+#  #KONG
+#  postgres:
+#    image: postgres:9.6-alpine
+#    restart: always
+#    hostname: kong-database
+#    container_name: kong-database
+#    environment:
+#      POSTGRES_USER: "kong"
+#      POSTGRES_DB: "kong"
+#      POSTGRES_PASSWORD: "kong"
+#    ports:
+#      - "5440:5432"
+#    networks:
+#      - kong-net
 
-  kong-bootstrap:
-    image: kong:2.5.0-alpine
-    hostname: kong-bootstrap
-    container_name: kong-bootstrap
-    depends_on:
-      - postgres
-    environment:
-      KONG_DATABASE: "postgres"
-      KONG_PG_HOST: "kong-database"
-      KONG_PG_DATABASE: "kong"
-      KONG_PG_USER: "kong"
-      KONG_PG_PASSWORD: "kong"
-    command: "kong migrations bootstrap"
-    restart: 'on-failure'
-    networks:
-      - kong-net
+#  kong-bootstrap:
+#    image: kong:2.5.0-alpine
+#    hostname: kong-bootstrap
+#    container_name: kong-bootstrap
+#    depends_on:
+#      - postgres
+#    environment:
+#      KONG_DATABASE: "postgres"
+#      KONG_PG_HOST: "kong-database"
+#      KONG_PG_DATABASE: "kong"
+#      KONG_PG_USER: "kong"
+#      KONG_PG_PASSWORD: "kong"
+#    command: "kong migrations bootstrap"
+#    restart: 'on-failure'
+#    networks:
+#      - kong-net
 
-  kong:
-    image: kong:2.5.0-alpine
-    restart: always
-    hostname: kong
-    container_name: kong
-    depends_on:
-      - kong-bootstrap
-    environment:
-      KONG_DATABASE: "postgres"
-      KONG_PG_HOST: "kong-database"
-      KONG_PG_DATABASE: "kong"
-      KONG_PG_USER: "kong"
-      KONG_PG_PASSWORD: "kong"
-      KONG_PROXY_ACCESS_LOG: '/dev/stdout'
-      KONG_ADMIN_ACCESS_LOG: '/dev/stdout'
-      KONG_PROXY_ERROR_LOG: '/dev/stderr'
-      KONG_ADMIN_ERROR_LOG: '/dev/stderr'
-      #KONG_PLUGINS: 'kafka-upstream' 
-      #KONG_KAFKA_BROKER_LIST: 'kafka:29092'
-      #KONG_KAFKA_TOPIC: 'getCurses'
-      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-    command: "kong start"
-    ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
-    networks:
-      - kong-net
+ # kong:
+ #   image: kong:2.5.0-alpine
+ ##   restart: always
+ #   hostname: kong
+  #  container_name: kong
+#    depends_on:
+##      - kong-bootstrap
+#    environment:
+#      KONG_DATABASE: "postgres"
+#      KONG_PG_HOST: "kong-database"
+#      KONG_PG_DATABASE: "kong"
+#      KONG_PG_USER: "kong"
+####      KONG_PG_PASSWORD: "kong"
+#      KONG_PROXY_ACCESS_LOG: '/dev/stdout'
+#      KONG_ADMIN_ACCESS_LOG: '/dev/stdout'
+#      KONG_PROXY_ERROR_LOG: '/dev/stderr'
+#      KONG_ADMIN_ERROR_LOG: '/dev/stderr'
+#      #KONG_PLUGINS: 'kafka-upstream' 
+##      #KONG_KAFKA_BROKER_LIST: 'kafka:29092'
+##      #KONG_KAFKA_TOPIC: 'getCurses'
+#      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+##    command: "kong start"
+#    ports:
+#      - "8000:8000"
+#      - "8443:8443"
+#      - "8001:8001"
+#      - "8444:8444"
+#    networks:
+#      - kong-net
 
   # puerto 3000
-  frontend:
-    build: ./frontend
-    ports: 
-      - "3000:3000"
-    volumes:
-      - ./frontend:/frontend
-      - exclude:/frontend/node_modules/
-    networks:
-      - frontend
-      - kong-net
+##  frontend:
+#    build: ./frontend
+#    ports: 
+#      - "3000:3000"
+#    volumes:
+#      - ./frontend:/frontend
+###      - exclude:/frontend/node_modules/
+ #   networks:
+ #     - frontend
+ #     - kong-net
 
   #SERVICIO para recolectar data del EventBroker
   #y guardarla en REDIS para su procesado
   #en dotnet
-  collect:
-    build: ./collect
-    depends_on:
-      - kafka
-    volumes:
-      - ./collect:/usr/local/app
-    environment:
-      KAFKA_BROKER: kafka:9092
-    networks:
-      - back-process
-      - kong-net
+#  collect:
+#    build: ./collect
+#    depends_on:
+#      - kafka
+#    volumes:
+#      - ./collect:/usr/local/app
+#    environment:
+#      KAFKA_BROKER: kafka:9092
+#    networks:
+#      - back-process
+#      - kong-net
 
   #SERVICIO para el procesamiento de data
   #en python
   #puerto 5000
-  procesing:
-    build: 
-      context: ./procesing
-    depends_on:
-      - kafka
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    ports:
-      - "5000:80"
-    environment:
-      KAFKA_BROKER: kafka:9092
-    volumes:
-      - ./procesing:/usr/local/app
-    networks:
-      - back-process
-      - kong-net
+#  procesing:
+#    build: 
+#      context: ./procesing
+#    depends_on:
+#      - kafka
+#    healthcheck: 
+#      test: ["CMD", "curl", "-f", "http://localhost"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 10s
+#    ports:
+#      - "5000:80"
+#    environment:
+#      KAFKA_BROKER: kafka:9092
+#    volumes:
+#      - ./procesing:/usr/local/app
+#    networks:
+#      - back-process
+#      - kong-net
 
   #SERVICIO para crud de cursos 
   #en python
@@ -192,7 +192,7 @@ services:
     build: 
       context: ./cursos
     depends_on:
-      - kafka
+#      - kafka
       - db-cursos
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -209,7 +209,7 @@ services:
       - ./cursos:/usr/local/app
     networks:
       - back-tier-cursos 
-      - kong-net
+ #     - kong-net
     
 
   #SERVICIO para crud de usuarios
@@ -219,7 +219,7 @@ services:
     build: 
       context: ./usuarios
     depends_on:
-      - kafka
+#      - kafka
       - db-usuarios
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -234,7 +234,7 @@ services:
       DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     networks:
       - back-tier-usuarios
-      - kong-net 
+ #     - kong-net 
     volumes:
       - ./usuarios:/usr/local/app
 
@@ -276,42 +276,43 @@ services:
     networks:
       - back-tier-cursos
   
-  redis-collect:
-    image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
-    networks:
-      - back-process
+#  redis-collect:
+#    image: redis:alpine
+#    volumes:
+#      - "./healthchecks:/healthchecks"
+#    ports:
+#      - "6379:6379"
+#    healthcheck:
+#      test: /healthchecks/redis.sh
+#      interval: "5s"
+#    networks:
+#      - back-process
 
-  redis-process:
-    image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
-    networks:
-      - back-process
+ # redis-process:
+ #   image: redis:alpine
+ #   volumes:
+ #     - "./healthchecks:/healthchecks"
+ #   ports:
+ #     - "6380:6379"
+ #   healthcheck:
+ #     test: /healthchecks/redis.sh
+ #     interval: "5s"
+ #   networks:
+ #     - back-process
 
 volumes:
   exclude:
   db-data-cursos:
   db-data-usuarios:
-  persist_volume:
-  postgres_data:
-  mongo_data:
+#  persist_volume:
+#  postgres_data:
+#  mongo_data:
 
 networks:
-  frontend:
+#  frontend:
   back-tier-usuarios:
   back-tier-cursos:
-  back-process:
-  kong-net:
+#  back-process:
+#  kong-net:
+
 

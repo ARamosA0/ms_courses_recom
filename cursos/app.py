@@ -93,7 +93,7 @@ def create_curso():
     
 # Subir datos de prueba
 
-@app.route('/cargar_datos_prueba', methods=['POST'])
+@app.route('/cargar_datos_prueba', methods=['GET'])
 def cargar_datos_prueba():
     try:
         with open('cursos.json', 'r') as file:
