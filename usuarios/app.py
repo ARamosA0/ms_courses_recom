@@ -8,8 +8,6 @@ import socket
 import random
 import json
 import logging
-import socket
-import time
 import secrets
 import string
 
@@ -21,7 +19,7 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers.extend(gunicorn_error_logger.handlers)
 app.logger.setLevel(logging.INFO)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') 
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')  
 db = SQLAlchemy(app)
 
 # Curso x Usuario
@@ -65,20 +63,8 @@ with app.app_context():
 
 def get_redis_broker():
     if not hasattr(g, 'redis'):
-        #cambiar el puerto por 6380 para comectarce al otro redis
-        # Este redis es el broker
         g.redis = Redis(host='redis-collect', port=6379, db=0, socket_timeout=5)
     return g.redis
-
-# def get_redis(host, db):
-#     if not hasattr(g, 'redis'):
-#         g.redis = {}
-#     
-#     key = f"{host}_{db}"
-#     if key not in g.redis:
-#         g.redis[key] = Redis(host=host, db=db, socket_timeout=5)
-#     
-#     return g.redis[key]
 
 
 # It's working?
@@ -90,14 +76,10 @@ def hello():
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
     try:
-        redis = get_redis('redis-collect', 0)
         usuarios = Usuario.query.all()
         usuarios_list = []
         for usuario in usuarios:
             usuarios_list.append(usuario.json())
-
-        # redis.rpush('getUsuario', )
-
         return jsonify({'usuarios': usuarios_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
@@ -155,14 +137,12 @@ def get_curso_usuarios():
 @app.route('/cursos_por_usuario/<int:usuario_id>', methods=['GET'])
 def get_cursos_por_usuario(usuario_id):
     try:
-        redis = get_redis_broker()
         cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
 
         if not cursos_usuario:
             return jsonify({'message': 'No se encontraron cursos para el usuario especificado'}), 404
 
         cursos_list = [curso_usuario.json() for curso_usuario in cursos_usuario]
-        redis.set('getUsuario', cursos)
         return jsonify({'cursos_por_usuario': cursos_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
@@ -242,3 +222,16 @@ def cargar_1k_curso_usuarios():
     except (SQLAlchemyError, FileNotFoundError) as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+
+
+
+# def get_redis_broker():
+#     if not hasattr(g, 'redis'):
+#         g.redis = Redis(host='redis-collect', port=6379, db=0, socket_timeout=5)
+#     return g.redis
+
+# redis = get_redis_broker()
+# redis.set('getUsuario', cursos)
+    

@@ -252,6 +252,7 @@ services:
       - "5000:83"
     environment:
       KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     volumes:
       - ./procesing:/usr/local/app
     networks:

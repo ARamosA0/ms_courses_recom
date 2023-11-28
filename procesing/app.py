@@ -19,6 +19,7 @@ app.logger.handlers.extend(gunicorn_error_logger.handlers)
 app.logger.setLevel(logging.INFO)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')  # 'postgresql://postgres-cursos:postgres-cursos@db-cursos:5433/postgres-cursos'
+db = SQLAlchemy(app)
 # def get_redis():
 #     if not hasattr(g, 'redis'):
 #         # cambiar el puerto por 6380 para conectarse al otro redis
