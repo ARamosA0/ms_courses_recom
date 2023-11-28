@@ -58,14 +58,18 @@ db = SQLAlchemy(app)
 
 class Cursos(db.Model):
     __tablename__ = 'cursos'
-    curso_id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.String(10), primary_key=True)
     nombre = db.Column(db.String(255), nullable=False)
-    costo = db.Column(db.Float, nullable=False)
-    horas = db.Column(db.Integer, nullable=False)
+    profesor = db.Column(db.String(255), nullable=False)
+    carrera = db.Column(db.String(10), nullable=False) 
+    clase = db.Column(db.String(10), nullable=False)   
+    idioma = db.Column(db.String(50), nullable=False) 
 
     def json(self):
-        return {'curso_id': self.curso_id, 'nombre': self.nombre, 'costo': self.costo, 'horas': self.horas}
-
+        return {
+            'curso_id': self.curso_id, 'nombre': self.nombre, 'profesor': self.profesor, 
+            'carrera': self.carrera, 'clase': self.clase, 'idioma': self.idioma
+        }
 
 with app.app_context():
     db.create_all()
@@ -93,30 +97,31 @@ def test():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 """
 
-#Let's get some courses
+# Let's get some courses
 @app.route('/cursos', methods=['GET'])
 def get_cursos():
     try:
         cursos = Cursos.query.all()
         cursos_list = []
         for curso in cursos:
-            cursos_list.append({
-                'curso_id': curso.curso_id,
-                'nombre': curso.nombre,
-                'costo': curso.costo,
-                'horas': curso.horas
-            })
+            cursos_list.append(curso.json())
         return jsonify({'cursos': cursos_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
-   
 
 # Let's create a course
 @app.route('/cursos', methods=['POST'])
 def create_curso():
     try:
         data = request.json
-        nuevo_curso = Cursos(nombre=data['nombre'], costo=data['costo'], horas=data['horas'])
+        nuevo_curso = Cursos(
+            curso_id=data['curso_id'],
+            nombre=data['nombre'],
+            profesor=data['profesor'],
+            carrera=data['carrera'],
+            clase=data['clase'],
+            idioma=data['idioma']
+        )
         db.session.add(nuevo_curso)
         db.session.commit()
         return jsonify({'message': 'Curso creado con éxito', 'curso_id': nuevo_curso.curso_id})
@@ -129,22 +134,24 @@ def create_curso():
 @app.route('/cargar_datos_prueba', methods=['GET'])
 def cargar_datos_prueba():
     try:
-        datos_prueba = [
-            {'nombre': 'Curso 1', 'costo': 100.0, 'horas': 20},
-            {'nombre': 'Curso 2', 'costo': 150.0, 'horas': 30},
-            {'nombre': 'Curso 3', 'costo': 200.0, 'horas': 60},
-            {'nombre': 'Curso 4', 'costo': 180.0, 'horas': 50},
-            
-        ]
+        with open('cursos.json', 'r') as file:
+            datos_prueba = json.load(file)
 
         for dato in datos_prueba:
-            nuevo_curso = Cursos(nombre=dato['nombre'], costo=dato['costo'], horas=dato['horas'])
+            nuevo_curso = Cursos(
+                curso_id=dato['curso_id'],
+                nombre=dato['nombre'],
+                profesor=dato['profesor'],
+                carrera=dato['carrera'],
+                clase=dato['clase'],
+                idioma=dato['idioma']
+            )
             db.session.add(nuevo_curso)
 
         db.session.commit()
-        
+
         return jsonify({'message': 'Datos de prueba cargados exitosamente'})
-    except SQLAlchemyError as e:
+    except (SQLAlchemyError, FileNotFoundError) as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 

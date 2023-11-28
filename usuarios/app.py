@@ -10,7 +10,8 @@ import json
 import logging
 import socket
 import time
-
+import secrets
+import string
 
 hostname = socket.gethostname()
 
@@ -26,13 +27,13 @@ db = SQLAlchemy(app)
 # Curso x Usuario
 class CursoUsuario(db.Model):
     __tablename__ = 'curso_usuario'
-    curso_usuario_id = db.Column(db.Integer, primary_key=True)
+    curso_usuario_id = db.Column(db.String(20), primary_key=True)
     usuario_id = db.Column(db.Integer, nullable=False)
-    curso_id = db.Column(db.Integer, nullable=False)
+    curso_id = db.Column(db.String(10), nullable=False) 
     puntuacion = db.Column(db.Float, nullable=True)
 
     def json(self):
-        return {'curso_usuario_id': self.curso_usuario_id,'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
+        return {'curso_usuario_id': self.curso_usuario_id, 'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
 
 # Usuario
 class Usuario(db.Model):
@@ -140,38 +141,104 @@ def create_usuario_cuenta():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/curso_usuario/<int:usuario_id>', methods=['GET'])
-def get_cursos_usuario(usuario_id):
+# Let's get all CursoUsuario data
+@app.route('/curso_usuarios', methods=['GET'])
+def get_curso_usuarios():
     try:
-        redis = get_redis_broker()
-        cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
-        cursos_list = []
-        for curso_usuario in cursos_usuario:
-            cursos_list.append({
-                'curso_usuario_id': curso_usuario.curso_usuario_id,
-                'curso_id': curso_usuario.curso_id,
-                'puntuacion': curso_usuario.puntuacion
-            })
-        cursos = json.dumps(cursos_list)
-        redis.set('getUsuario', cursos)
-        print(cursos_list)
-        print("cursos Listt")
-        return cursos
+        curso_usuarios = CursoUsuario.query.all()
+        curso_usuarios_list = [curso_usuario.json() for curso_usuario in curso_usuarios]
+        return jsonify({'curso_usuarios': curso_usuarios_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
 
-# Let's create a this...
-@app.route('/curso_usuario', methods=['POST'])
-def add_usuario_curso():
+# Let's get courses for a specific user
+@app.route('/cursos_por_usuario/<int:usuario_id>', methods=['GET'])
+def get_cursos_por_usuario(usuario_id):
+    try:
+        redis = get_redis_broker()
+        cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
+
+        if not cursos_usuario:
+            return jsonify({'message': 'No se encontraron cursos para el usuario especificado'}), 404
+
+        cursos_list = [curso_usuario.json() for curso_usuario in cursos_usuario]
+        redis.set('getUsuario', cursos)
+        return jsonify({'cursos_por_usuario': cursos_list})
+    except SQLAlchemyError as e:
+        return jsonify({'error': str(e)}), 500
+
+# Let's create curso_usuario data
+@app.route('/curso_usuarios', methods=['POST'])
+def create_curso_usuario():
     try:
         data = request.json
-        nuevo_curso_usuario = CursoUsuario(usuario_id=data['usuario_id'], curso_id=data['curso_id'], puntuacion=data['puntuacion'])
+        usuario_id = data.get('usuario_id')
+        curso_id = data.get('curso_id')
+        puntuacion = data.get('puntuacion')
+
+        # Generate curso_usuario_id with the specified format
+        curso_usuario_id = f"cu-{secrets.choice(string.ascii_letters)}{secrets.choice(string.ascii_letters)}{secrets.choice(string.digits)}{secrets.choice(string.digits)}-{secrets.choice(string.ascii_letters)}{secrets.choice(string.digits)}{secrets.choice(string.digits)}"
+
+        nuevo_curso_usuario = CursoUsuario(
+            curso_usuario_id=curso_usuario_id,
+            usuario_id=usuario_id,
+            curso_id=curso_id,
+            puntuacion=puntuacion
+        )
+
         db.session.add(nuevo_curso_usuario)
         db.session.commit()
-        return jsonify({'message': 'Usuario añadido al curso con éxito', 'curso_usuario_id': nuevo_curso_usuario.curso_usuario_id})
+
+        return jsonify({'message': 'CursoUsuario creado con éxito', 'curso_usuario_id': nuevo_curso_usuario.curso_usuario_id})
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=82, debug=True, threaded=True)
+
+# Let's load data from curso_usuarios.json / 14K
+@app.route('/cargar_datos_curso_usuarios', methods=['GET'])
+def cargar_datos_curso_usuarios():
+    try:
+        with open('cursos_usuarios.json', 'r') as file:
+            datos_curso_usuarios = json.load(file)
+
+        for dato in datos_curso_usuarios:
+            nuevo_curso_usuario = CursoUsuario(
+                curso_usuario_id=dato['curso_usuario_id'],
+                usuario_id=dato['usuario_id'],
+                curso_id=dato['curso_id'],
+                puntuacion=dato['puntuacion']
+            )
+            db.session.add(nuevo_curso_usuario)
+
+        db.session.commit()
+
+        return jsonify({'message': 'Datos de CursoUsuario cargados exitosamente'})
+    except (SQLAlchemyError, FileNotFoundError) as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# Let's load data from 1Kcur_usuarios.json
+# Esta ruta solo cargara 1000 datos de prueba
+@app.route('/cargar_1k_curso_usuarios', methods=['GET'])
+def cargar_1k_curso_usuarios():
+    try:
+        with open('1Kcur_usuarios.json', 'r') as file:
+            datos_curso_usuarios = json.load(file)
+
+        for dato in datos_curso_usuarios:
+            nuevo_curso_usuario = CursoUsuario(
+                curso_usuario_id=dato['curso_usuario_id'],
+                usuario_id=dato['usuario_id'],
+                curso_id=dato['curso_id'],
+                puntuacion=dato['puntuacion']
+            )
+            db.session.add(nuevo_curso_usuario)
+
+        db.session.commit()
+
+        return jsonify({'message': 'Datos de CursoUsuario cargados exitosamente'})
+    except (SQLAlchemyError, FileNotFoundError) as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
