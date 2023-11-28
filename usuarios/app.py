@@ -137,12 +137,14 @@ def get_curso_usuarios():
 @app.route('/cursos_por_usuario/<int:usuario_id>', methods=['GET'])
 def get_cursos_por_usuario(usuario_id):
     try:
+        redis = get_redis_broker()
         cursos_usuario = CursoUsuario.query.filter_by(usuario_id=usuario_id).all()
 
         if not cursos_usuario:
             return jsonify({'message': 'No se encontraron cursos para el usuario especificado'}), 404
-
+            
         cursos_list = [curso_usuario.json() for curso_usuario in cursos_usuario]
+        redis.set('getUsuarioCursos', cursos_list)
         return jsonify({'cursos_por_usuario': cursos_list})
     except SQLAlchemyError as e:
         return jsonify({'error': str(e)}), 500
