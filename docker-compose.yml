@@ -167,6 +167,7 @@ services:
   procesing:
     build: 
       context: ./procesing
+      target: dev
     depends_on:
       - kafka
     healthcheck: 
@@ -191,6 +192,7 @@ services:
   cursos:
     build: 
       context: ./cursos
+      target: dev
     depends_on:
       - kafka
       - db-cursos
@@ -218,6 +220,7 @@ services:
   usuarios:
     build: 
       context: ./usuarios
+      target: dev
     depends_on:
       - kafka
       - db-usuarios
