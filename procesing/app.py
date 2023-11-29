@@ -5,6 +5,10 @@ import socket
 import random
 import json
 import logging
+import dask.dataframe as dd
+import time
+import numpy as np
+import pandas as pd
 
 hostname = socket.gethostname()
 
@@ -20,12 +24,101 @@ def get_redis_broker():
         g.redis = Redis(host="redis-collect", port=6379, db=0, socket_timeout=5)
     return g.redis
 
+###
+def get_data(input_file):
+  inicio = time.time()
+  ratings = dd.read_table(input_file, sep='\t', assume_missing=True, names=['userId', 'movieId', 'rating', 'rating_timestamp'])
+  ratings_pandas = ratings.compute()
+  fin = time.time()
+  print(fin-inicio)
+  return ratings.head()
+ 
+def consolidate_data(df):
+    # Group by 'userId' and 'movieId' and calculate the mean of 'rating'
+    consolidated_df = df.groupby(['userId', 'movieId'])['rating'].mean().unstack()
+    return consolidated_df
+
+
+
+def limpia(np1, np2):
+    mask = ~np.isnan(np2)
+    np1 = np1[mask]
+    np2 = np2[mask]
+
+    np1, np2 = np2, np1
+
+    mask = ~np.isnan(np2)
+    np1 = np1[mask]
+    np2 = np2[mask]
+
+    np1, np2 = np2, np1
+
+    return pd.DataFrame({'A': np1, 'B': np2})
+
+def computeManhattanDistance(ax, bx):
+    return np.sum(np.abs(ax - bx))
+
+def computeNearestNeighbor(username, users_df):
+    user_data = np.array(users_df.loc[username])
+    distances = np.empty((users_df.shape[0],), dtype=float)
+
+    for i, (index, row) in enumerate(users_df.iterrows()):
+        if index != username:
+            ax = np.array(row)
+            bx = np.array(user_data)
+            temp = limpia(ax, bx)
+            ax = np.array(temp["A"].tolist())
+            bx = np.array(temp["B"].tolist())
+            distances[i] = computeManhattanDistance(ax, bx)
+
+    sorted_indices = np.argsort(distances)
+    sorted_distances = distances[sorted_indices]
+
+    return list(zip(sorted_distances, users_df.index[sorted_indices]))
+
+
+def recommend(username, users_df):
+    nearest_neighbors = computeNearestNeighbor(username, users_df)
+    user_data = np.array(users_df.loc[username])
+    user_items = np.isnan(user_data)
+
+    # Inicializar las recomendaciones como un diccionario vacío
+    recommendations = {}
+
+    # Iterar sobre los vecinos más cercanos
+    for distance, neighbor in nearest_neighbors:
+        neighbor_data = np.array(users_df.loc[neighbor])
+        neighbor_items = np.isnan(neighbor_data)
+
+        # Encontrar ítems que el vecino haya valorado y el usuario no
+        new_items = np.logical_and(neighbor_items, ~user_items)
+
+        # Actualizar las recomendaciones con la puntuación ponderada por la distancia
+        for item_index, has_new_item in enumerate(new_items):
+            if has_new_item:
+                if item_index not in recommendations:
+                    recommendations[item_index] = 0
+                recommendations[item_index] += neighbor_data[item_index] / (distance + 1)
+
+    # Ordenar las recomendaciones de mayor a menor puntuación
+    sorted_recommendations = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
+
+    # Obtener los índices de los elementos recomendados
+    recommended_items = [item_index for item_index, score in sorted_recommendations]
+
+    # Devolver las recomendaciones
+    return recommended_items
+
+###
+
 @app.route("/", methods=['POST','GET'])
 def hello():
-    redis = get_redis_broker()
-    valor = redis.get('getUsuarioCursos')
-    
-  return make_response(jsonify({'message':'API procesamiento de datos'})) 
+    #redis = get_redis_broker()
+    #valor = redis.get('getUsuarioCursos')
+    df=get_data("ratings.dat")
+    recommended_items = computeNearestNeighbor(1, df)
+    print(recommended_items)
+    return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
 
 if __name__ == "__main__":
