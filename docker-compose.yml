@@ -54,23 +54,86 @@ services:
 
   #APIGATEWAY en Express.js
   #puerto 9090
-  apigateway:
-    build: ./api_gateway
-    depends_on:
-      - kafka
-    volumes:
-      - ./api_gateway:/usr/local/app
-    ports:
-      - "9090:9090"
+  # apigateway:
+  #   build: ./api_gateway
+  #   depends_on:
+  #     - kafka
+  #   volumes:
+  #     - ./api_gateway:/usr/local/app
+  #   ports:
+  #     - "9090:9090"
+  #   environment:
+  #     KAFKA_BROKER: kafka:9092
+  #   networks:
+  #     - frontend
+  #     - back-process
+  #     - back-tier-cursos
+  #     - back-tier-usuarios
+  
+  
+  
+  #KONG
+  postgres:
+    image: postgres:9.6-alpine
+    restart: always
+    hostname: kong-database
+    container_name: kong-database
     environment:
-      KAFKA_BROKER: kafka:9092
+      POSTGRES_USER: "kong"
+      POSTGRES_DB: "kong"
+      POSTGRES_PASSWORD: "kong"
+    ports:
+      - "5440:5432"
     networks:
-      - frontend
-      - back-process
-      - back-tier-cursos
-      - back-tier-usuarios
+      - kong-net
 
-  # Frontend en React y vite
+  kong-bootstrap:
+    image: kong:2.5.0-alpine
+    hostname: kong-bootstrap
+    container_name: kong-bootstrap
+    depends_on:
+      - postgres
+    environment:
+      KONG_DATABASE: "postgres"
+      KONG_PG_HOST: "kong-database"
+      KONG_PG_DATABASE: "kong"
+      KONG_PG_USER: "kong"
+      KONG_PG_PASSWORD: "kong"
+    command: "kong migrations bootstrap"
+    restart: 'on-failure'
+    networks:
+      - kong-net
+
+  kong:
+    image: kong:2.5.0-alpine
+    restart: always
+    hostname: kong
+    container_name: kong
+    depends_on:
+      - kong-bootstrap
+    environment:
+      KONG_DATABASE: "postgres"
+      KONG_PG_HOST: "kong-database"
+      KONG_PG_DATABASE: "kong"
+      KONG_PG_USER: "kong"
+      KONG_PG_PASSWORD: "kong"
+      KONG_PROXY_ACCESS_LOG: '/dev/stdout'
+      KONG_ADMIN_ACCESS_LOG: '/dev/stdout'
+      KONG_PROXY_ERROR_LOG: '/dev/stderr'
+      KONG_ADMIN_ERROR_LOG: '/dev/stderr'
+      #KONG_PLUGINS: 'kafka-upstream' 
+      #KONG_KAFKA_BROKER_LIST: 'kafka:29092'
+      #KONG_KAFKA_TOPIC: 'getCurses'
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+    command: "kong start"
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+    networks:
+      - kong-net
+
   # puerto 3000
   frontend:
     build: ./frontend
@@ -80,7 +143,8 @@ services:
       - ./frontend:/frontend
       - exclude:/frontend/node_modules/
     networks:
-        - frontend
+      - frontend
+      - kong-net
 
   #SERVICIO para recolectar data del EventBroker
   #y guardarla en REDIS para su procesado
@@ -89,13 +153,13 @@ services:
     build: ./collect
     depends_on:
       - kafka
-      - apigateway
     volumes:
       - ./collect:/usr/local/app
     environment:
       KAFKA_BROKER: kafka:9092
     networks:
-        - back-process
+      - back-process
+      - kong-net
 
   #SERVICIO para el procesamiento de data
   #en python
@@ -103,9 +167,9 @@ services:
   procesing:
     build: 
       context: ./procesing
+      target: dev
     depends_on:
       - kafka
-      - apigateway
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
@@ -117,9 +181,10 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     volumes:
-      - ./procesing:/procesing
+      - ./procesing:/usr/local/app
     networks:
       - back-process
+      - kong-net
 
   #SERVICIO para crud de cursos 
   #en python
@@ -127,9 +192,9 @@ services:
   cursos:
     build: 
       context: ./cursos
+      target: dev
     depends_on:
       - kafka
-      - apigateway
       - db-cursos
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -141,8 +206,13 @@ services:
       - "5001:81"
     environment:
       KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-cursos:postgres-cursos@db-cursos:5432/postgres-cursos
+    volumes:
+      - ./cursos:/usr/local/app
     networks:
       - back-tier-cursos 
+      - kong-net
+    
 
   #SERVICIO para crud de usuarios
   #en python
@@ -150,9 +220,9 @@ services:
   usuarios:
     build: 
       context: ./usuarios
+      target: dev
     depends_on:
       - kafka
-      - apigateway
       - db-usuarios
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -164,13 +234,18 @@ services:
       - "5002:82"
     environment:
       KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     networks:
       - back-tier-usuarios
+      - kong-net 
+    volumes:
+      - ./usuarios:/usr/local/app
 
   #BD de Usuarios en PostgreSQL
   db-usuarios:
     image: postgres:15-alpine
     environment:
+      POSTGRES_DB: "postgres-usuarios"
       POSTGRES_NAME: "postgres-usuarios"
       POSTGRES_USER: "postgres-usuarios"
       POSTGRES_PASSWORD: "postgres-usuarios"
@@ -189,6 +264,7 @@ services:
   db-cursos:
     image: postgres:15-alpine
     environment:
+      POSTGRES_DB: "postgres-cursos"
       POSTGRES_NAME: "postgres-cursos"
       POSTGRES_USER: "postgres-cursos"
       POSTGRES_PASSWORD: "postgres-cursos"
@@ -231,9 +307,13 @@ volumes:
   exclude:
   db-data-cursos:
   db-data-usuarios:
+  persist_volume:
+  postgres_data:
+  mongo_data:
 
 networks:
   frontend:
   back-tier-usuarios:
   back-tier-cursos:
   back-process:
+  kong-net:

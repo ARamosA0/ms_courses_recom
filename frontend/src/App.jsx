@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import reactLogo from './assets/react.svg';
+import './App.css';
+import localImage from './image/logo.png'; // Ruta correcta a tu imagen local
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = () => {
+    // Aquí puedes implementar la lógica de autenticación
+    // Por ahora, solo imprimo en la consola los datos ingresados
+    console.log('Email:', email);
+    console.log('Password:', password);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="login-container">
+      <div className="login-form">
+        <img src={localImage} className="logo " alt="logo"/>
+        <h1>Log In</h1>
+        <form>
+          <div className="input-container">
+            <label htmlFor="email">
+              <i className="fas fa-envelope"></i>
+            </label>
+
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+            />
+          </div>
+          <div className="input-container">
+            <label htmlFor="password">
+              <i className="fas fa-lock"></i>
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+            />
+          </div>
+          <button type="button" onClick={handleLogin}>
+            INICIAR SESIÓN
+          </button>
+        </form>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        FUNCIONA
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
