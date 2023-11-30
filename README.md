@@ -1,5 +1,11 @@
 # **ARQUITECTURA DE MS CON KAFKA**
 
+## **DOCKER SWARM**
+```shell
+docker stack deploy --compose-file docker-stack.yml recomend
+```
+
+
 ---
 
 ## **Diagramas**
