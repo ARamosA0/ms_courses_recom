@@ -4,6 +4,8 @@ services:
   # puerto 3000
   frontend:
     image: aldorama/frontend
+    ports: 
+      - "3000:3000"
     networks:
       - frontend
       - kong-net
@@ -22,6 +24,8 @@ services:
   #puerto 5000
   procesing:
     image: aldorama/procesing
+    ports:
+      - "5000:80"
     networks:
       - back-process
       - kong-net
@@ -31,6 +35,8 @@ services:
   #puerto 5001
   cursos:
     image: aldorama/cursos
+    ports:
+      - "5001:81"
     environment:
       DATABASE_URL: postgresql://postgres-cursos:postgres-cursos@db-cursos:5432/postgres-cursos
     networks:
@@ -49,6 +55,8 @@ services:
       POSTGRES_NAME: "postgres-usuarios"
       POSTGRES_USER: "postgres-usuarios"
       POSTGRES_PASSWORD: "postgres-usuarios"
+    ports:
+      - "5432:5432"
     volumes:
       - "db-data-usuarios:/var/lib/postgresql/data"
     networks:
@@ -62,6 +70,8 @@ services:
       POSTGRES_NAME: "postgres-cursos"
       POSTGRES_USER: "postgres-cursos"
       POSTGRES_PASSWORD: "postgres-cursos"
+    ports:
+      - "5433:5432"
     volumes:
       - "db-data-cursos:/var/lib/postgresql/data"
     networks:
@@ -69,11 +79,15 @@ services:
   
   redis-collect:
     image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - back-process
 
   redis-process:
     image: redis:alpine
+    ports:
+      - "6380:6379"
     networks:
       - back-process
 
