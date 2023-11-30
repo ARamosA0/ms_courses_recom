@@ -49,6 +49,8 @@ services:
       POSTGRES_NAME: "postgres-usuarios"
       POSTGRES_USER: "postgres-usuarios"
       POSTGRES_PASSWORD: "postgres-usuarios"
+    volumes:
+      - "db-data-usuarios:/var/lib/postgresql/data"
     networks:
       - back-tier-usuarios
 
@@ -60,6 +62,8 @@ services:
       POSTGRES_NAME: "postgres-cursos"
       POSTGRES_USER: "postgres-cursos"
       POSTGRES_PASSWORD: "postgres-cursos"
+    volumes:
+      - "db-data-cursos:/var/lib/postgresql/data"
     networks:
       - back-tier-cursos
   
