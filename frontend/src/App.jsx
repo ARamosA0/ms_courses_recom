@@ -1,19 +1,32 @@
-import React, { useState } from 'react';
-import reactLogo from './assets/react.svg';
+import  { useState } from 'react';
+import { Navigate } from 'react-router-dom'; // Importa Navigate en lugar de Redirect
 import './App.css';
-import localImage from './image/logo.png'; // Ruta correcta a tu imagen local
-
+import localImage from './image/logo.png';
 
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [redirectToDashboard, setRedirectToDashboard] = useState(false);
 
   const handleLogin = () => {
-    // Aquí puedes implementar la lógica de autenticación
-    // Por ahora, solo imprimo en la consola los datos ingresados
-    console.log('Email:', email);
-    console.log('Password:', password);
+    if (email == 'admin' && password == '1234') {
+      // Aquí puedes implementar la lógica de autenticación
+      // Por ahora, solo imprimo en la consola los datos ingresados
+      console.log('Email:', email);
+      console.log('Password:', password);
+
+      // Establece redirectToDashboard a true para activar la redirección
+      setRedirectToDashboard(true);
+    } else {
+      // Muestra una alerta si los campos están vacíos
+      alert('Por favor, completa todos los campos antes de iniciar sesión.');
+    }
   };
+
+  // Usa Navigate en lugar de Redirect
+  if (redirectToDashboard) {
+    return <Navigate to="/dashboard" />;
+  }
 
   return (
     <div className="login-container">
@@ -25,7 +38,6 @@ function App() {
             <label htmlFor="email">
               <i className="fas fa-envelope"></i>
             </label>
-
             <input
               type="email"
               id="email"
