@@ -46,22 +46,30 @@ class CursoUsuario(db.Model):
         return {'curso_usuario_id': self.curso_usuario_id, 'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
     
 # Funcion para crear DataFrame
-def get_data_as_dataframe():
-    with app.app_context(): 
+def dataframe_cursos_usuarios():
+    with app.app_context():
         try:
             cursos_usuarios = CursoUsuario.query.all()
 
-            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id} for curso in cursos_usuarios]
+            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id, 'puntuacion': curso.puntuacion} for curso in cursos_usuarios]
 
             df = pd.DataFrame(data_list)
-            #app.logger.info(df.head(5))   # Esto es para probar los datos  
-            return df
+
+            pivot_df = df.pivot(index='userid', columns='cursoid', values='puntuacion')
+            
+            pivot_df = pivot_df.fillna(0)
+
+            return pivot_df
 
         except SQLAlchemyError as e:
             app.logger.error(f"Error al obtener datos de la base de datos: {e}")
             return None
 
-get_data_as_dataframe()
+
+dataframe = dataframe_cursos_usuarios()
+
+if dataframe is not None:
+    app.logger.info(dataframe)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
