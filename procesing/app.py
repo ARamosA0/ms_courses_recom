@@ -20,11 +20,18 @@ app.logger.setLevel(logging.INFO)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') 
 db = SQLAlchemy(app)
 
-def get_redis():
+def get_redis_broker():
     if not hasattr(g, 'redis'):
         #cambiar el puerto por 6380 para comectarce al otro redis
-        g.redis = Redis(host="redis", port=6379, db=0, socket_timeout=5)
+        g.redis = Redis(host="redis-collect", port=6379, db=0, socket_timeout=5)
     return g.redis
+
+@app.route("/", methods=['POST','GET'])
+def hello():
+    redis = get_redis_broker()
+    valor = redis.get('getUsuarioCursos')
+    
+    return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
 # Modelo de curso
 class CursoUsuario(db.Model):
@@ -36,24 +43,23 @@ class CursoUsuario(db.Model):
 
     def json(self):
         return {'curso_usuario_id': self.curso_usuario_id, 'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
-
-@app.route('/', methods=['GET'])
-def test():
-    try:
-        db.session.execute(text('SELECT 1'))
-        return jsonify({'status': 'Conexión lograda'})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-# Datos de curso x usuario
-@app.route('/curso_usuarios', methods=['GET'])
-def get_curso_usuarios():
-    try:
-        curso_usuarios = CursoUsuario.query.all()
-        curso_usuarios_list = [curso_usuario.json() for curso_usuario in curso_usuarios]
-        return jsonify({'curso_usuarios': curso_usuarios_list})
-    except SQLAlchemyError as e:
-        return jsonify({'error': str(e)}), 500
     
+# Funcion para crear DataFrame
+def get_data_as_dataframe():
+    try:
+        cursos_usuarios = CursoUsuario.query.all()
+
+        data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id} for curso in cursos_usuarios]
+
+        df = pd.DataFrame(data_list)
+        app.console.log(df.head(5))
+        return df
+
+    except SQLAlchemyError as e:
+        print(f"Error al obtener datos de la base de datos: {e}")
+        return None
+
+get_data_as_dataframe()
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
