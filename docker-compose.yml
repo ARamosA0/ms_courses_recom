@@ -44,7 +44,7 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
     volumes:
-      - ./procesing:/procesing
+      - ./procesing:/usr/local/app
     networks:
       - back-process
       - kong-net
