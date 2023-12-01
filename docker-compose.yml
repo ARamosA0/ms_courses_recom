@@ -30,25 +30,14 @@ services:
   #en python
   #puerto 5000
   procesing:
-    build: 
-      context: ./procesing
-      target: dev
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    image: aldorama/procesing:solo10m
     ports:
       - "5000:80"
     environment:
       KAFKA_BROKER: kafka:9092
-    volumes:
-      - ./procesing:/usr/local/app
     networks:
       - back-process
       - kong-net
-
   #SERVICIO para crud de cursos 
   #en python
   #puerto 5001
