@@ -8,6 +8,7 @@ import socket
 import random
 import json
 import logging
+import pandas as pd
 
 hostname = socket.gethostname()
 
@@ -28,8 +29,8 @@ def get_redis_broker():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
-    redis = get_redis_broker()
-    valor = redis.get('getUsuarioCursos')
+#    redis = get_redis_broker()
+#    valor = redis.get('getUsuarioCursos')
     
     return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
@@ -46,18 +47,19 @@ class CursoUsuario(db.Model):
     
 # Funcion para crear DataFrame
 def get_data_as_dataframe():
-    try:
-        cursos_usuarios = CursoUsuario.query.all()
+    with app.app_context(): 
+        try:
+            cursos_usuarios = CursoUsuario.query.all()
 
-        data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id} for curso in cursos_usuarios]
+            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id} for curso in cursos_usuarios]
 
-        df = pd.DataFrame(data_list)
-        app.console.log(df.head(5))
-        return df
+            df = pd.DataFrame(data_list)
+            #app.logger.info(df.head(5))   # Esto es para probar los datos  
+            return df
 
-    except SQLAlchemyError as e:
-        print(f"Error al obtener datos de la base de datos: {e}")
-        return None
+        except SQLAlchemyError as e:
+            app.logger.error(f"Error al obtener datos de la base de datos: {e}")
+            return None
 
 get_data_as_dataframe()
 
