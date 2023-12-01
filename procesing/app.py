@@ -29,8 +29,8 @@ def get_redis_broker():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
-#    redis = get_redis_broker()
-#    valor = redis.get('getUsuarioCursos')
+    redis = get_redis_broker()
+    valor = redis.get('getUsuarioCursos')
     
     return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
