@@ -5,7 +5,11 @@ import App from './App';
 import Dashboard from './dashboard'; // Asegúrate de importar el componente Dashboard
 import './index.css';
 import Cursos from './pages/Courses';
-import Recomendaciones from './pages/recomendaciones';
+import Carrera from './pages/Table';
+import Nav from './components/NavBar';
+import Recomendaciones from './pages/Recomendaciones';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -13,8 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/cursos" element={<Cursos />} />
-        <Route path="/dashboard/recomendaciones" element={<Recomendaciones />} />
+        <Route path="/cursos" element={<Cursos />} />
+        <Route path="/carreras" element={<Carrera />} />
+        <Route path="/recomendaciones" element={<Recomendaciones />} />
+        <Route path="/nav" element={<Nav />} />
+
       </Routes>
     </Router>
   </React.StrictMode>,

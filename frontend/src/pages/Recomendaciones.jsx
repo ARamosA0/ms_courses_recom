@@ -1,14 +1,24 @@
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import NavbarComponent from '../components/NavBar';
+import "./Recomendaciones.css";
 
 
 const Recomendaciones = () => {
 
   return (
+
+    <div className="todo">
+    <div className="nav">
+      <NavbarComponent />
+    </div>
+    <div className="cards">
+
     <div className="promo-page">
-      <div className="promo mw-100" style={{ backgroundImage: 'url("https://www.tecsup.edu.pe/sites/default/files/imagenes-webdrupal/48086-PINTGR-Cover-web-1.png")', paddingBottom: '30px'}}>
-        <Container style={{ marginTop: '120px' }}>
+      <div className="promo mw-100" >
+        <div className="reco">
+        <Container style={{ marginTop: '20px' }}>
           <Row>
             <Col>
               <h2 className="text-center fw-bold text-white">Recomendaciones principales</h2>
@@ -42,7 +52,6 @@ const Recomendaciones = () => {
                   </p>
                   <div className="d-grid">
                     <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                    <button className="btn btn-primary ">Primary button</button>
                   </div>
                 </div>
               </div>
@@ -64,6 +73,7 @@ const Recomendaciones = () => {
             </Col>
           </Row>
         </Container>
+      </div>
       </div>
 
       <Container style={{ marginTop: '50px' }}>
@@ -120,6 +130,8 @@ const Recomendaciones = () => {
           </Col>
         </Row>
       </Container>
+    </div>
+    </div>
     </div>
   )
 }

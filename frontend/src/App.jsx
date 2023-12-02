@@ -2,6 +2,7 @@ import  { useState } from 'react';
 import { Navigate } from 'react-router-dom'; // Importa Navigate en lugar de Redirect
 import './App.css';
 import localImage from './image/logo.png';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [email, setEmail] = useState('');
