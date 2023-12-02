@@ -39,9 +39,10 @@ class CursoUsuario(db.Model):
     
 def obtener_datos_postgres():
     try:
-        resultados = db.session.query(CursoUsuario.usuario_id, CursoUsuario.curso_id, CursoUsuario.puntuacion).all()
-        df = dd.from_pandas(resultados, npartitions=1)
-        df_pivot = df.pivot_table(index='usuario_id', columns='curso_id', values='puntuacion', aggfunc='mean')
+        engine_uri = app.config['SQLALCHEMY_DATABASE_URI']
+        
+        df = dd.read_sql_table('curso_usuario', engine_uri, index_col='usuario_id')
+        df_pivot = df.pivot_table(columns='curso_id', aggfunc='mean')
         alert.console.info(df_pivot.head(5))
         return df_pivot.compute()
 
@@ -53,8 +54,7 @@ def obtener_datos_postgres():
 def obtener_datos():
     df = obtener_datos_postgres()
     if df is not None:
-        # Convertir DataFrame a JSON y devolverlo
-        json_resultado = df.to_json(orient='index')
+        json_resultado = df.to_json(orient='columns')
         return jsonify(json_resultado)
 
     return make_response(jsonify({'message':'API procesamiento de datos'})) 
