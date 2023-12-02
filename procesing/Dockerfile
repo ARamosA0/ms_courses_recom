@@ -12,7 +12,7 @@ WORKDIR /usr/local/app
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install "dask[dataframe]" --upgrade  
-
+RUN pip install "dask[distributed]" --upgrade
 # Define a stage specifically for development, where it'll watch for
 # filesystem changes
 FROM base AS dev

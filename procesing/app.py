@@ -2,11 +2,13 @@ from flask import Flask, render_template, request, make_response, g, jsonify
 from redis import Redis
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text 
 import os
 import socket
 import logging
-import dask.dataframe as dd
+import time
+from dask.distributed import Client
+from dask import dataframe as dd
+import pandas as pd
 
 hostname = socket.gethostname()
 
@@ -18,6 +20,7 @@ app.logger.setLevel(logging.INFO)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') 
 db = SQLAlchemy(app)
+client = Client()
 
 def get_redis_broker():
     if not hasattr(g, 'redis'):
@@ -25,8 +28,6 @@ def get_redis_broker():
         g.redis = Redis(host="redis-collect", port=6379, db=0, socket_timeout=5)
     return g.redis
 
-
-# Modelo de curso
 class CursoUsuario(db.Model):
     __tablename__ = 'curso_usuario'
     curso_usuario_id = db.Column(db.String(20), primary_key=True)
@@ -36,27 +37,37 @@ class CursoUsuario(db.Model):
 
     def json(self):
         return {'curso_usuario_id': self.curso_usuario_id, 'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
-    
-def obtener_datos_postgres():
-    try:
-        engine_uri = app.config['SQLALCHEMY_DATABASE_URI']
-        
-        df = dd.read_sql_table('curso_usuario', engine_uri, index_col='usuario_id')
-        df_pivot = df.pivot_table(columns='curso_id', aggfunc='mean')
-        alert.console.info(df_pivot.head(5))
-        return df_pivot.compute()
 
-    except SQLAlchemyError as e:
-        app.logger.error(f"Error al obtener datos de PostgreSQL: {str(e)}")
-        return None
+def dataframe_cursos_usuarios():
+    start_time = time.time()
+    with app.app_context():
+        try:
+            cursos_usuarios = CursoUsuario.query.all()
+
+            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id, 'puntuacion': curso.puntuacion} for curso in cursos_usuarios]
+            ddf = dd.from_pandas(pd.DataFrame(data_list), npartitions=2)
+            ddf = ddf.categorize(columns=['cursoid'])
+            pivot_ddf = ddf.pivot_table(index='userid', columns='cursoid', values='puntuacion')
+
+            pivot_ddf = pivot_ddf.fillna(0)
+
+            pivot_df = pivot_ddf.compute()
+
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"La operación tomó {duration} segundos.")
+
+            return pivot_df
+
+        except SQLAlchemyError as e:
+            app.logger.error(f"Error al obtener datos de la base de datos: {e}")
+            return None
+
+dataframe = dataframe_cursos_usuarios()
+print(dataframe.head())
 
 @app.route("/", methods=['POST','GET'])
-def obtener_datos():
-    df = obtener_datos_postgres()
-    if df is not None:
-        json_resultado = df.to_json(orient='columns')
-        return jsonify(json_resultado)
-
+def hello():
     return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
 if __name__ == "__main__":

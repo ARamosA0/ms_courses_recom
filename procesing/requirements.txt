@@ -6,3 +6,4 @@ confluent_kafka
 Flask-SQLAlchemy
 psycopg2-binary
 dask
+pandas
