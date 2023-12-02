@@ -5,12 +5,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text 
 import os
 import socket
-import random
-import json
 import logging
 import dask.dataframe as dd
-import pandas as pd
-from dask.distributed import Client
 
 hostname = socket.gethostname()
 
@@ -29,12 +25,6 @@ def get_redis_broker():
         g.redis = Redis(host="redis-collect", port=6379, db=0, socket_timeout=5)
     return g.redis
 
-@app.route("/", methods=['POST','GET'])
-def hello():
-    redis = get_redis_broker()
-    valor = redis.get('getUsuarioCursos')
-    
-    return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
 # Modelo de curso
 class CursoUsuario(db.Model):
@@ -47,54 +37,31 @@ class CursoUsuario(db.Model):
     def json(self):
         return {'curso_usuario_id': self.curso_usuario_id, 'usuario_id': self.usuario_id, 'curso_id': self.curso_id, 'puntuacion': self.puntuacion }
     
-# Funcion para crear DataFrame
-def dataframe_cursos_usuarios():
-    with app.app_context():
-        try:
-            cursos_usuarios = CursoUsuario.query.all()
+def obtener_datos_postgres():
+    try:
+        resultados = db.session.query(CursoUsuario.usuario_id, CursoUsuario.curso_id, CursoUsuario.puntuacion).all()
+        df = dd.from_pandas(resultados, npartitions=1)
+        df_pivot = df.pivot_table(index='usuario_id', columns='curso_id', values='puntuacion', aggfunc='mean')
 
-            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id, 'puntuacion': curso.puntuacion} for curso in cursos_usuarios]
+        return df_pivot.compute()
 
-            df = pd.DataFrame(data_list)
+    except SQLAlchemyError as e:
+        app.logger.error(f"Error al obtener datos de PostgreSQL: {str(e)}")
+        return None
 
-            pivot_df = df.pivot(index='userid', columns='cursoid', values='puntuacion')
-            
-            pivot_df = pivot_df.fillna(0)
+@app.route('/obtener_datos', methods=['GET'])
+def obtener_datos():
+    df = obtener_datos_postgres()
 
-            return pivot_df
+    if df is not None:
+        # Convertir DataFrame a JSON y devolverlo
+        json_resultado = df.to_json(orient='index')
+        return jsonify(json_resultado)
 
-        except SQLAlchemyError as e:
-            app.logger.error(f"Error al obtener datos de la base de datos: {e}")
-            return None
+    return jsonify({'error': 'Error al obtener datos de PostgreSQL'}), 500
 
-
-client = Client()
-
-# Función para obtener los datos como un DataFrame Dask
-def get_data_as_dask_dataframe():
-    with app.app_context(): 
-        try:
-            cursos_usuarios = CursoUsuario.query.all()
-
-            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id, 'puntuacion': curso.puntuacion} for curso in cursos_usuarios]
-
-            df = pd.DataFrame(data_list)
-            df['userid'] = df['userid'].astype('category')
-            df['cursoid'] = df['cursoid'].astype('category')
-
-            ddf = dd.from_pandas(df, npartitions=2)  # Convertir a DataFrame Dask
-            ddf = ddf.pivot_table(index='userid', columns='cursoid', values='puntuacion', aggfunc='mean')
-            app.logger.info(ddf.head(5))   # Esto es para probar los datos  
-            return ddf
-
-        except SQLAlchemyError as e:
-            app.logger.error(f"Error al obtener datos de la base de datos: {e}")
-            return None
-        
-dataframe = get_data_as_dask_dataframe()
-
-if dataframe is not None:
-    app.logger.info(dataframe)
+df = obtener_datos_postgres()
+app.console.info(df.head(5))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
