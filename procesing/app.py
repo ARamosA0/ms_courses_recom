@@ -42,26 +42,22 @@ def obtener_datos_postgres():
         resultados = db.session.query(CursoUsuario.usuario_id, CursoUsuario.curso_id, CursoUsuario.puntuacion).all()
         df = dd.from_pandas(resultados, npartitions=1)
         df_pivot = df.pivot_table(index='usuario_id', columns='curso_id', values='puntuacion', aggfunc='mean')
-
+        alert.console.info(df_pivot.head(5))
         return df_pivot.compute()
 
     except SQLAlchemyError as e:
         app.logger.error(f"Error al obtener datos de PostgreSQL: {str(e)}")
         return None
 
-@app.route('/obtener_datos', methods=['GET'])
+@app.route("/", methods=['POST','GET'])
 def obtener_datos():
     df = obtener_datos_postgres()
-
     if df is not None:
         # Convertir DataFrame a JSON y devolverlo
         json_resultado = df.to_json(orient='index')
         return jsonify(json_resultado)
 
-    return jsonify({'error': 'Error al obtener datos de PostgreSQL'}), 500
-
-df = obtener_datos_postgres()
-app.console.info(df.head(5))
+    return make_response(jsonify({'message':'API procesamiento de datos'})) 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
