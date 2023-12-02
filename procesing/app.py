@@ -8,7 +8,9 @@ import socket
 import random
 import json
 import logging
+import dask.dataframe as dd
 import pandas as pd
+from dask.distributed import Client
 
 hostname = socket.gethostname()
 
@@ -66,7 +68,30 @@ def dataframe_cursos_usuarios():
             return None
 
 
-dataframe = dataframe_cursos_usuarios()
+client = Client()
+
+# Función para obtener los datos como un DataFrame Dask
+def get_data_as_dask_dataframe():
+    with app.app_context(): 
+        try:
+            cursos_usuarios = CursoUsuario.query.all()
+
+            data_list = [{'userid': curso.usuario_id, 'cursoid': curso.curso_id, 'puntuacion': curso.puntuacion} for curso in cursos_usuarios]
+
+            df = pd.DataFrame(data_list)
+            df['userid'] = df['userid'].astype('category')
+            df['cursoid'] = df['cursoid'].astype('category')
+
+            ddf = dd.from_pandas(df, npartitions=2)  # Convertir a DataFrame Dask
+            ddf = ddf.pivot_table(index='userid', columns='cursoid', values='puntuacion', aggfunc='mean')
+            app.logger.info(ddf.head(5))   # Esto es para probar los datos  
+            return ddf
+
+        except SQLAlchemyError as e:
+            app.logger.error(f"Error al obtener datos de la base de datos: {e}")
+            return None
+        
+dataframe = get_data_as_dask_dataframe()
 
 if dataframe is not None:
     app.logger.info(dataframe)
