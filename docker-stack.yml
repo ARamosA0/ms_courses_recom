@@ -1,0 +1,110 @@
+version: "3.4"
+services:
+  
+  # puerto 3000
+  frontend:
+    image: aldorama/frontend
+    ports: 
+      - "3000:3000"
+    networks:
+      - frontend
+      - kong-net
+
+  #SERVICIO para recolectar data del EventBroker
+  #y guardarla en REDIS para su procesado
+  #en dotnet
+  collect:
+    image: aldorama/collect
+    networks:
+      - back-process
+      - kong-net
+
+  #SERVICIO para el procesamiento de data
+  #en python
+  #puerto 5000
+  procesing:
+    image: aldorama/procesing:solo10m
+    ports:
+      - "5000:80"
+    networks:
+      - back-process
+      - kong-net
+    deploy:
+      replicas: 5
+
+  #SERVICIO para crud de cursos 
+  #en python
+  #puerto 5001
+  cursos:
+    image: aldorama/cursos
+    ports:
+      - "5001:81"
+    environment:
+      DATABASE_URL: postgresql://postgres-cursos:postgres-cursos@db-cursos:5432/postgres-cursos
+    networks:
+      - back-tier-cursos 
+      - kong-net
+    
+
+  #SERVICIO para crud de usuarios
+  #en python
+  #puerto 5002
+  #BD de Usuarios en PostgreSQL
+  db-usuarios:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: "postgres-usuarios"
+      POSTGRES_NAME: "postgres-usuarios"
+      POSTGRES_USER: "postgres-usuarios"
+      POSTGRES_PASSWORD: "postgres-usuarios"
+    ports:
+      - "5432:5432"
+    volumes:
+      - "db-data-usuarios:/var/lib/postgresql/data"
+    networks:
+      - back-tier-usuarios
+
+  #BD de Cursos en PostgreSQL
+  db-cursos:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: "postgres-cursos"
+      POSTGRES_NAME: "postgres-cursos"
+      POSTGRES_USER: "postgres-cursos"
+      POSTGRES_PASSWORD: "postgres-cursos"
+    ports:
+      - "5433:5432"
+    volumes:
+      - "db-data-cursos:/var/lib/postgresql/data"
+    networks:
+      - back-tier-cursos
+  
+  redis-collect:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - back-process
+
+  redis-process:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    networks:
+      - back-process
+
+volumes:
+  exclude:
+  db-data-cursos:
+  db-data-usuarios:
+  persist_volume:
+  postgres_data:
+  mongo_data:
+
+networks:
+  frontend:
+  back-tier-usuarios:
+  back-tier-cursos:
+  back-process:
+  kong-net:
+
