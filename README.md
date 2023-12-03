@@ -52,12 +52,12 @@ curl -X POST http://localhost:8001/upstreams \
 
 ```
 curl -X POST http://localhost:8001/upstreams/loadbalancer_upstream/targets \
-  --data target='IP:5000'
+  --data target='http://IP:5000'
 ```
 
 ```
 curl -X POST http://localhost:8001/upstreams/loadbalancer_upstream/targets \
-  --data target='IP:5001'
+  --data target='http://IP:5001'
 ```
 
 **Servicios**
@@ -65,21 +65,21 @@ curl -X POST http://localhost:8001/upstreams/loadbalancer_upstream/targets \
 ```
 curl -i -s -X POST http://localhost:8001/services \
   --data name=usuarios \
-  --data url='ip:5000' \
+  --data url='http://ip:5000' \
   --data host='loadbalancer_upstream'
   ```
 
   ```
 curl -i -s -X POST http://localhost:8001/services \
   --data name=cursos \
-  --data url='ip:5001' \
+  --data url='http://ip:5001' \
   --data host='loadbalancer_upstream'
   ```
 
   ```
 curl -i -s -X POST http://localhost:8001/services \
   --data name=procesar \
-  --data url='ip:5002' \
+  --data url='http://ip:5002' \
   --data host='loadbalancer_upstream'
   ```
 
