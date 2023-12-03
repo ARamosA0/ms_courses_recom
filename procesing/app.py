@@ -94,16 +94,22 @@ def recommend(username, users_df):
 
 @app.route("/", methods=['POST','GET'])
 def hello():
+    return make_response(jsonify({'message':'API procesamiento de datos'})) 
+
+@app.route("/<int:usuario_id>", methods=['GET'])
+def get_usuario(usuario_id):
     #redis = get_redis_broker()
     #valor = redis.get('getUsuarioCursos')
     inicio = time.time()
     df=get_data('ratings.dat')
-    fin = time.time()
-    print(fin-inicio)
     items = computeNearestNeighbor(1, df)
-    print(items)
-    return make_response(jsonify({'message':'API procesamiento de datos'})) 
-
+    fin = time.time()
+    return make_response(jsonify({
+        'message':'API procesamiento de datos',
+        'tiempo': fin-inicio,
+        'items': items
+    })) 
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
