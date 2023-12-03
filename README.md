@@ -42,6 +42,68 @@ Hay dos formas para hacer esto, mediante postman y mediante terminal
 
 Para ambas es importante conocer la IP de tu computadora, **IMPORTANTE** reemplazar *IP* de las urls
 
+#### CURL
+
+**Load Balancer**
+```
+curl -X POST http://localhost:8001/upstreams \
+  --data name=loadbalancer_upstream
+```
+
+```
+curl -X POST http://localhost:8001/upstreams/loadbalancer_upstream/targets \
+  --data target='IP:5000'
+```
+
+```
+curl -X POST http://localhost:8001/upstreams/loadbalancer_upstream/targets \
+  --data target='IP:5001'
+```
+
+**Servicios**
+
+```
+curl -i -s -X POST http://localhost:8001/services \
+  --data name=usuarios \
+  --data url='ip:5000' \
+  --data host='loadbalancer_upstream'
+  ```
+
+  ```
+curl -i -s -X POST http://localhost:8001/services \
+  --data name=cursos \
+  --data url='ip:5001' \
+  --data host='loadbalancer_upstream'
+  ```
+
+  ```
+curl -i -s -X POST http://localhost:8001/services \
+  --data name=procesar \
+  --data url='ip:5002' \
+  --data host='loadbalancer_upstream'
+  ```
+
+  **Router**
+
+  ```
+  curl -i -X POST http://localhost:8001/services/usuarios/routes \
+  --data 'paths[]=/usuarios' \
+  --data name=usuarios_route
+  ```
+
+  ```
+  curl -i -X POST http://localhost:8001/services/cursos/routes \
+  --data 'paths[]=/cursos' \
+  --data name=cursos_route
+  ```
+
+  ```
+  curl -i -X POST http://localhost:8001/services/procesar/routes \
+  --data 'paths[]=/procesar' \
+  --data name=procesar_route
+  ```
+
+
 ##### *POSTMAN*
 
 **Load Balancer**
