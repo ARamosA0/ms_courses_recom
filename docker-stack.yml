@@ -1,14 +1,11 @@
 version: "3.4"
 services:
-
+  
   # puerto 3000
   frontend:
-    build: ./frontend
+    image: aldorama/frontend
     ports: 
       - "3000:3000"
-    volumes:
-      - ./frontend:/frontend
-      - exclude:/frontend/node_modules/
     networks:
       - frontend
       - kong-net
@@ -17,11 +14,7 @@ services:
   #y guardarla en REDIS para su procesado
   #en dotnet
   collect:
-    build: ./collect
-    volumes:
-      - ./collect:/usr/local/app
-    environment:
-      KAFKA_BROKER: kafka:9092
+    image: aldorama/collect
     networks:
       - back-process
       - kong-net
@@ -33,33 +26,21 @@ services:
     image: aldorama/procesing:solo10m
     ports:
       - "5000:80"
-    environment:
-      KAFKA_BROKER: kafka:9092
     networks:
       - back-process
       - kong-net
+    deploy:
+      replicas: 5
+
   #SERVICIO para crud de cursos 
   #en python
   #puerto 5001
   cursos:
-    build: 
-      context: ./cursos
-      target: dev
-    depends_on:
-      - db-cursos
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    image: aldorama/cursos
     ports:
       - "5001:81"
     environment:
-      KAFKA_BROKER: kafka:9092
       DATABASE_URL: postgresql://postgres-cursos:postgres-cursos@db-cursos:5432/postgres-cursos
-    volumes:
-      - ./cursos:/usr/local/app
     networks:
       - back-tier-cursos 
       - kong-net
@@ -68,29 +49,6 @@ services:
   #SERVICIO para crud de usuarios
   #en python
   #puerto 5002
-  usuarios:
-    build: 
-      context: ./usuarios
-      target: dev
-    depends_on:
-      - db-usuarios
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    ports:
-      - "5002:82"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
-    networks:
-      - back-tier-usuarios
-      - kong-net 
-    volumes:
-      - ./usuarios:/usr/local/app
-
   #BD de Usuarios en PostgreSQL
   db-usuarios:
     image: postgres:15-alpine
@@ -99,14 +57,10 @@ services:
       POSTGRES_NAME: "postgres-usuarios"
       POSTGRES_USER: "postgres-usuarios"
       POSTGRES_PASSWORD: "postgres-usuarios"
-    volumes:
-      - "db-data-usuarios:/var/lib/postgresql/data"
-      - "./healthchecks:/healthchecks"
     ports:
       - "5432:5432"
-    healthcheck:
-      test: /healthchecks/postgres.sh
-      interval: "5s"
+    volumes:
+      - "db-data-usuarios:/var/lib/postgresql/data"
     networks:
       - back-tier-usuarios
 
@@ -118,38 +72,24 @@ services:
       POSTGRES_NAME: "postgres-cursos"
       POSTGRES_USER: "postgres-cursos"
       POSTGRES_PASSWORD: "postgres-cursos"
-    volumes:
-      - "db-data-cursos:/var/lib/postgresql/data"
-      - "./healthchecks:/healthchecks"
     ports:
       - "5433:5432"
-    healthcheck:
-      test: /healthchecks/postgres.sh
-      interval: "5s"
+    volumes:
+      - "db-data-cursos:/var/lib/postgresql/data"
     networks:
       - back-tier-cursos
   
   redis-collect:
     image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
     ports:
       - "6379:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
     networks:
       - back-process
 
   redis-process:
     image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
     ports:
       - "6380:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
     networks:
       - back-process
 
@@ -167,3 +107,4 @@ networks:
   back-tier-cursos:
   back-process:
   kong-net:
+

@@ -1,3 +1,10 @@
 Flask
 Redis
 gunicorn
+flask-cors
+confluent_kafka
+Flask-SQLAlchemy
+psycopg2-binary
+dask
+numpy
+pandas

@@ -6,7 +6,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the application directory
-WORKDIR /usuarios
+WORKDIR /usr/local/app
 
 # Install our requirements.txt
 COPY requirements.txt ./requirements.txt
@@ -25,7 +25,7 @@ FROM base AS final
 # Copy our code from the current folder to the working directory inside the container
 COPY . .
 
-# Make port 82 available for links and/or publish
+# Make port 80 available for links and/or publish
 EXPOSE 82
 
 # Define our command to be run when launching the container
