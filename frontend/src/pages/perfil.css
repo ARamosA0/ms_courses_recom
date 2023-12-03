@@ -1,0 +1,44 @@
+/* Perfil.css */
+
+.perfil-container {
+    display: flex;
+  }
+  
+  .menu-portafolio {
+    width: 60px;
+    background-color: #a8c5d8;
+  }
+  
+  .list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .list li {
+    padding: 10px;
+    margin: 0;
+    color: #333;
+  }
+  
+  .content {
+    flex-grow: 1;
+    padding: 20px;
+    /* Ajusta este valor según sea necesario para evitar el solapamiento del menú */
+    margin-left: 60px; /* Igual al ancho del menú lateral */
+    transition: margin-left 1s;
+  }
+  
+  /* Estilos específicos para la vista de perfil */
+  .content h1 {
+    color: #333;
+  }
+  
+  .content p {
+    color: #666;
+  }
+  
+  /* Asegúrate de que el contenido se ajuste cuando el menú está activo */
+  .menu-portafolio.active + .content {
+    margin-left: 200px; /* Igual al ancho del menú expandido */
+  }
+  
