@@ -167,4 +167,3 @@ networks:
   back-tier-cursos:
   back-process:
   kong-net:
-
