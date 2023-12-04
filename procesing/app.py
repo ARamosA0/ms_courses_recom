@@ -35,7 +35,7 @@ def get_data(input_file):
     df = dd.read_table(input_file, sep='\t', assume_missing=True, names=['userId', 'movieId', 'rating', 'rating_timestamp'])
     grouped = df.groupby(['userId', 'movieId'])['rating'].mean().compute()
     result = grouped.unstack()
-  return result
+    return result
  
 def consolidate_data(df):
     # Group by 'userId' and 'movieId' and calculate the mean of 'rating'
