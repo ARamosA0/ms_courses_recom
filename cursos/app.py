@@ -7,11 +7,12 @@ import os
 import socket
 import json
 import logging
+import flask_cors import CORS
 
 hostname = socket.gethostname()
 
 app = Flask(__name__)
-#cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app)
 
 gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers.extend(gunicorn_error_logger.handlers)

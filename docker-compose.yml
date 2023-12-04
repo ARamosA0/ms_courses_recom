@@ -44,8 +44,8 @@ services:
   cursos:
     build: 
       context: ./cursos
-      target: dev
     depends_on:
+#      - kafka
       - db-cursos
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -62,7 +62,7 @@ services:
       - ./cursos:/usr/local/app
     networks:
       - back-tier-cursos 
-      - kong-net
+ #     - kong-net
     
 
   #SERVICIO para crud de usuarios
@@ -71,8 +71,8 @@ services:
   usuarios:
     build: 
       context: ./usuarios
-      target: dev
     depends_on:
+#      - kafka
       - db-usuarios
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -87,7 +87,7 @@ services:
       DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     networks:
       - back-tier-usuarios
-      - kong-net 
+ #     - kong-net 
     volumes:
       - ./usuarios:/usr/local/app
 

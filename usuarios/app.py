@@ -10,10 +10,12 @@ import json
 import logging
 import secrets
 import string
+from flask_cors import CORS
 
 hostname = socket.gethostname()
 
 app = Flask(__name__)
+CORS(app)
 
 gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers.extend(gunicorn_error_logger.handlers)

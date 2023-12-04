@@ -23,7 +23,7 @@ services:
   #en python
   #puerto 5000
   procesing:
-    image: aldorama/procesing:solo10m
+    image: aldorama/procesing:25mv3
     ports:
       - "5000:80"
     networks:
@@ -36,7 +36,7 @@ services:
   #en python
   #puerto 5001
   cursos:
-    image: aldorama/cursos
+    image: aldorama/apicursos:v2
     ports:
       - "5001:81"
     environment:
@@ -44,6 +44,17 @@ services:
     networks:
       - back-tier-cursos 
       - kong-net
+
+  usuarios:
+    image: aldorama/apiusuarios:v2
+    ports:
+      - "5002:82"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
+    networks:
+      - back-tier-usuarios
+ #     - kong-net
     
 
   #SERVICIO para crud de usuarios
