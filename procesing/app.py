@@ -32,9 +32,10 @@ def get_redis_broker():
 ###
 
 def get_data(input_file):
-  ratings = dd.read_table(input_file, sep='\t', assume_missing=True, names=['userId', 'movieId', 'rating', 'rating_timestamp'])
-  ratings_pandas = ratings.compute()#ratings_pandas = ratings.compute()
-  return ratings.head()
+    df = dd.read_table(input_file, sep='\t', assume_missing=True, names=['userId', 'movieId', 'rating', 'rating_timestamp'])
+    grouped = df.groupby(['userId', 'movieId'])['rating'].mean().compute()
+    result = grouped.unstack()
+  return result
  
 def consolidate_data(df):
     # Group by 'userId' and 'movieId' and calculate the mean of 'rating'
