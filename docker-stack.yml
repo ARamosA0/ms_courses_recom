@@ -23,7 +23,7 @@ services:
   #en python
   #puerto 5000
   procesing:
-    image: aldorama/procesing:25mv3
+    image: aldorama/procesing:solo10mv2
     ports:
       - "5000:80"
     networks:
