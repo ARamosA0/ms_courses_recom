@@ -1,51 +1,37 @@
 version: "3.4"
 services:
-  
-  # puerto 3000
-  frontend:
-    build: ./frontend
-    ports: 
-      - "3000:3000"
-    volumes:
-      - ./frontend:/frontend
-      - exclude:/frontend/node_modules/
-    networks:
-      - frontend
-      - kong-net
-
-  #SERVICIO para recolectar data del EventBroker
-  #y guardarla en REDIS para su procesado
-  #en dotnet
-  collect:
-    build: ./collect
-    volumes:
-      - ./collect:/usr/local/app
-    environment:
-      KAFKA_BROKER: kafka:9092
-    networks:
-      - back-process
-      - kong-net
-
-  #SERVICIO para el procesamiento de data
-  #en python
-  #puerto 5000
   procesing:
-    image: aldorama/procesing:solo10m
+    build: 
+      context: ./procesing
+    depends_on:
+  #    - kafka
+      - db-usuarios
+    healthcheck: 
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     ports:
       - "5000:80"
     environment:
       KAFKA_BROKER: kafka:9092
+      DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
+    volumes:
+      - ./procesing:/usr/local/app
     networks:
       - back-process
-      - kong-net
+      - back-tier-usuarios
+  #    - kong-net
+
   #SERVICIO para crud de cursos 
   #en python
   #puerto 5001
   cursos:
     build: 
       context: ./cursos
-      target: dev
     depends_on:
+#      - kafka
       - db-cursos
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -62,7 +48,7 @@ services:
       - ./cursos:/usr/local/app
     networks:
       - back-tier-cursos 
-      - kong-net
+ #     - kong-net
     
 
   #SERVICIO para crud de usuarios
@@ -71,8 +57,8 @@ services:
   usuarios:
     build: 
       context: ./usuarios
-      target: dev
     depends_on:
+#      - kafka
       - db-usuarios
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -87,7 +73,7 @@ services:
       DATABASE_URL: postgresql://postgres-usuarios:postgres-usuarios@db-usuarios:5432/postgres-usuarios
     networks:
       - back-tier-usuarios
-      - kong-net 
+ #     - kong-net 
     volumes:
       - ./usuarios:/usr/local/app
 
@@ -128,42 +114,20 @@ services:
       interval: "5s"
     networks:
       - back-tier-cursos
-  
-  redis-collect:
-    image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
-    networks:
-      - back-process
-
-  redis-process:
-    image: redis:alpine
-    volumes:
-      - "./healthchecks:/healthchecks"
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: /healthchecks/redis.sh
-      interval: "5s"
-    networks:
-      - back-process
 
 volumes:
   exclude:
   db-data-cursos:
   db-data-usuarios:
-  persist_volume:
-  postgres_data:
-  mongo_data:
+#  persist_volume:
+#  postgres_data:
+#  mongo_data:
 
 networks:
-  frontend:
+#  frontend:
   back-tier-usuarios:
   back-tier-cursos:
   back-process:
-  kong-net:
+#  kong-net:
+
+
