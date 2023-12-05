@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function CreateUser() {
@@ -6,30 +6,13 @@ function CreateUser() {
   const [apellido, setApellido] = useState('');
   const [dni, setDni] = useState('');
   const [correo, setCorreo] = useState('');
-  const [existingUsers, setExistingUsers] = useState([]);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
-  // Obtener datos existentes al cargar el componente
-  useEffect(() => {
-    const fetchExistingUsers = async () => {
-      try {
-        const response = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios');
-        if (response.ok) {
-          const data = await response.json();
-          setExistingUsers(data.usuarios);
-        } else {
-          console.error('Error al obtener usuarios existentes');
-        }
-      } catch (error) {
-        console.error('Error de red:', error);
-      }
-    };
-
-    fetchExistingUsers();
-  }, []); // El segundo parámetro [] asegura que el efecto se ejecute solo una vez al montar el componente
-
-  const handleCreateUser = async () => {
+  const handleCreateUserAndCuenta = async () => {
     try {
-      const response = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios', {
+      // Crear usuario
+      const userResponse = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,22 +20,41 @@ function CreateUser() {
         body: JSON.stringify({
           nombre,
           apellido,
-          dni: parseInt(dni), // Convierte el dni a número
+          dni: parseInt(dni),
           correo,
         }),
       });
 
-      if (response.ok) {
-        console.log('Usuario creado con éxito');
-        // Actualizar la lista de usuarios después de crear uno nuevo
-        fetchExistingUsers();
-        // Puedes redirigir al usuario a otra página o realizar otras acciones después de crear el usuario
+      if (!userResponse.ok) {
+        const userErrorData = await userResponse.json();
+        throw new Error(`Error al crear usuario: ${userErrorData.error}`);
+      }
+
+      // Obtener el usuario_id del usuario recién creado
+      const { usuario_id } = await userResponse.json();
+
+      // Crear cuenta de usuario
+      const cuentaResponse = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          usuario_id,
+          username,
+          password,
+        }),
+      });
+
+      if (cuentaResponse.ok) {
+        console.log('Usuario y cuenta creados con éxito');
+        // Puedes realizar acciones adicionales después de crear el usuario y la cuenta
       } else {
-        const data = await response.json();
-        console.error('Error al crear usuario:', data.error);
+        const cuentaErrorData = await cuentaResponse.json();
+        throw new Error(`Error al crear cuenta de usuario: ${cuentaErrorData.error}`);
       }
     } catch (error) {
-      console.error('Error de red:', error);
+      console.error('Error de red:', error.message);
     }
   };
 
@@ -108,19 +110,34 @@ function CreateUser() {
             onChange={(e) => setCorreo(e.target.value)}
           />
         </div>
-        <button type="button" className="btn btn-primary" onClick={handleCreateUser}>
-          Crear Usuario
-        </button>
-
-        {/* Muestra los datos existentes */}
-        <div className="mt-4">
-          <h3>Datos Existentes</h3>
-          <ul>
-            {existingUsers.map((user) => (
-              <li key={user.usuario_id}>{`${user.nombre} ${user.apellido} - DNI: ${user.dni} - Correo: ${user.correo}`}</li>
-            ))}
-          </ul>
+        <div className="mb-3">
+          <label htmlFor="username" className="form-label">
+            Username
+          </label>
+          <input
+            type="username"
+            className="form-control"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
         </div>
+        <div className="mb-3">
+          <label htmlFor="password" className="form-label">
+            Password
+          </label>
+          <input
+            type="password"
+            className="form-control"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        
+        <button type="button" className="btn btn-primary" onClick={handleCreateUserAndCuenta}>
+          Crear Usuario y Cuenta
+        </button>
       </form>
     </div>
   );

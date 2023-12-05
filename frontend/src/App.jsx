@@ -10,18 +10,36 @@ function App() {
   const [redirectToDashboard, setRedirectToDashboard] = useState(false);
   const [redirectToCreateUser, setRedirectToCreateUser] = useState(false);
 
-  const handleLogin = () => {
-    if (email === 'admin' && password === '1234') {
-      // Aquí puedes implementar la lógica de autenticación
-      // Por ahora, solo imprimo en la consola los datos ingresados
-      console.log('Email:', email);
-      console.log('Password:', password);
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Establece redirectToDashboard a true para activar la redirección al dashboard
-      setRedirectToDashboard(true);
-    } else {
-      // Muestra una alerta si los campos están vacíos
-      alert('Por favor, completa todos los campos antes de iniciar sesión.');
+      if (response.ok) {
+        const cuentas = await response.json();
+
+        // Verifica si las credenciales del usuario coinciden con alguna cuenta
+        const cuentaEncontrada = cuentas.usuarios_cuentas.find(
+          (cuenta) => cuenta.username === email && cuenta.password === password
+        );
+
+        if (cuentaEncontrada) {
+          console.log('Usuario autenticado con éxito');
+          // Aquí puedes redirigir al usuario a la página de dashboard
+          setRedirectToDashboard(true);
+        } else {
+          alert('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+        }
+      } else {
+        const data = await response.json();
+        console.error('Error al obtener cuentas:', data.error);
+      }
+    } catch (error) {
+      console.error('Error de red:', error);
     }
   };
 
