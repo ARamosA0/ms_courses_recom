@@ -9,6 +9,7 @@ import Carrera from './pages/Table';
 import Nav from './components/NavBar';
 import Recomendaciones from './pages/Recomendaciones';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CreateUsers from './pages/CreateUsers';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/carreras" element={<Carrera />} />
         <Route path="/recomendaciones" element={<Recomendaciones />} />
         <Route path="/nav" element={<Nav />} />
+        <Route path="/CreateUsers" element={<CreateUsers />} />
 
       </Routes>
     </Router>

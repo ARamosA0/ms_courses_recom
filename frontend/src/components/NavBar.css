@@ -1,0 +1,11 @@
+/* NavBar.css */
+
+.espacio {
+    height: 56px; /* La altura del Navbar. Ajusta según sea necesario */
+  }
+  
+  /* Asegura que el contenido no se sobreponga al Navbar */
+  body {
+    padding-top: 56px; /* La misma altura que el Navbar */
+  }
+  

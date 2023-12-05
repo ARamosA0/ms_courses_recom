@@ -1,5 +1,5 @@
-import  { useState } from 'react';
-import { Navigate } from 'react-router-dom'; // Importa Navigate en lugar de Redirect
+import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import './App.css';
 import localImage from './image/logo.png';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -8,15 +8,16 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirectToDashboard, setRedirectToDashboard] = useState(false);
+  const [redirectToCreateUser, setRedirectToCreateUser] = useState(false);
 
   const handleLogin = () => {
-    if (email == 'admin' && password == '1234') {
+    if (email === 'admin' && password === '1234') {
       // Aquí puedes implementar la lógica de autenticación
       // Por ahora, solo imprimo en la consola los datos ingresados
       console.log('Email:', email);
       console.log('Password:', password);
 
-      // Establece redirectToDashboard a true para activar la redirección
+      // Establece redirectToDashboard a true para activar la redirección al dashboard
       setRedirectToDashboard(true);
     } else {
       // Muestra una alerta si los campos están vacíos
@@ -24,15 +25,24 @@ function App() {
     }
   };
 
+  const handleCreateAccount = () => {
+    // Establece redirectToCreateUser a true para activar la redirección a la página de creación de usuarios
+    setRedirectToCreateUser(true);
+  };
+
   // Usa Navigate en lugar de Redirect
   if (redirectToDashboard) {
     return <Navigate to="/dashboard" />;
   }
 
+  if (redirectToCreateUser) {
+    return <Navigate to="/CreateUsers" />;
+  }
+
   return (
     <div className="login-container">
       <div className="login-form">
-        <img src={localImage} className="logo " alt="logo"/>
+        <img src={localImage} className="logo " alt="logo" />
         <h1>Log In</h1>
         <form>
           <div className="input-container">
@@ -61,6 +71,9 @@ function App() {
           </div>
           <button type="button" onClick={handleLogin}>
             INICIAR SESIÓN
+          </button>
+          <button type="button" onClick={handleCreateAccount}>
+            CREAR CUENTA
           </button>
         </form>
       </div>

@@ -4,17 +4,29 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
+import { FaStar } from 'react-icons/fa';
 import "./Course.css";
 
 function Table() {
   const [cursos, setCursos] = useState([]);
+  const [filteredCursos, setFilteredCursos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' por defecto
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://ip172-18-0-13-cln533ogftqg00fboehg-5001.direct.labs.play-with-docker.com/cursos");
+        const response = await fetch("http://ip172-18-0-64-clnkkc4snmng008p6ii0-5001.direct.labs.play-with-docker.com/cursos");
         const data = await response.json();
-        setCursos(data.cursos);
+        const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
+        const cursosWithValoraciones = data.cursos.map(curso => {
+          return {
+            ...curso,
+            valoracion: storedValoraciones[curso.curso_id] || curso.valoracion
+          };
+        });
+        setCursos(cursosWithValoraciones);
+        filterAndSortCursos(cursosWithValoraciones);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -23,17 +35,62 @@ function Table() {
     fetchData();
   }, []);
 
+  const filterAndSortCursos = (data) => {
+    let filteredCursos = data;
+
+    filteredCursos = filteredCursos.filter((curso) =>
+      curso.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (sortOrder === 'asc') {
+      filteredCursos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    } else {
+      filteredCursos.sort((a, b) => b.nombre.localeCompare(a.nombre));
+    }
+
+    setFilteredCursos([...filteredCursos]);
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    filterAndSortCursos(cursos);
+  };
+
+  const handleSortChange = () => {
+    const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newSortOrder);
+    filterAndSortCursos(cursos);
+  };
+
+  const handleStarClick = (cursoId, valoracion) => {
+    const updatedCursos = cursos.map(curso => {
+      if (curso.curso_id === cursoId) {
+        saveValoracionToLocalStorage(cursoId, valoracion);
+        return {
+          ...curso,
+          valoracion: valoracion
+        };
+      }
+      return curso;
+    });
+    setCursos(updatedCursos);
+    filterAndSortCursos(updatedCursos);
+  };
+
+  const saveValoracionToLocalStorage = (cursoId, valoracion) => {
+    const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
+    storedValoraciones[cursoId] = valoracion;
+    localStorage.setItem("valoraciones", JSON.stringify(storedValoraciones));
+  };
+
   return (
     <div className="todo">
-      <div className="nav">
-        <NavbarComponent />
-      </div>
+      <NavbarComponent onSearch={handleSearch} onSortChange={handleSortChange} />
       <div className="cards">
         <Row xs={1} md={3} className="g-4">
-          {cursos.map((curso) => (
+          {filteredCursos.map((curso) => (
             <Col key={curso.curso_id}>
               <Card>
-                {/* Agrega tu lógica para manejar la imagen (curso.imagenUrl) si es necesario */}
                 <Card.Body>
                   <Card.Title>{curso.nombre}</Card.Title>
                   <Card.Text>
@@ -44,6 +101,8 @@ function Table() {
                     Clase: {curso.clase}
                     <br />
                     Idioma: {curso.idioma}
+                    <br />
+                    Valoración: {renderStarRating(curso.curso_id, curso.valoracion)}
                   </Card.Text>
                 </Card.Body>
               </Card>
@@ -53,7 +112,21 @@ function Table() {
       </div>
     </div>
   );
+
+  function renderStarRating(cursoId, valoracion) {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <FaStar
+          key={i}
+          color={i <= valoracion ? '#ffc107' : '#e4e5e9'}
+          style={{ cursor: 'pointer' }}
+          onClick={() => handleStarClick(cursoId, i)}
+        />
+      );
+    }
+    return stars;
+  }
 }
 
 export default Table;
-

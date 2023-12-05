@@ -55,6 +55,7 @@ body {
   cursor: pointer;
   transition: background-color 0.25s;
   width: 100%;
+  margin-bottom: 0.5em;
 }
 
 .login-form button:hover {
@@ -66,4 +67,10 @@ body {
   padding: 1em;
   will-change: filter;
   transition: filter 300ms;
+}
+
+
+/* Añade espacio entre los botones */
+.login-form button + button {
+  margin-top: 0.5em;
 }
