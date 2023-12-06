@@ -1,140 +1,132 @@
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import React, { useState, useEffect } from "react";
 import NavbarComponent from '../components/NavBar';
-import "./Recomendaciones.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Card from 'react-bootstrap/Card';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { FaStar } from 'react-icons/fa';
+import "./Course.css";
 
+function Recomendaciones() {
+  const [cursos, setCursos] = useState([]);
+  const [filteredCursos, setFilteredCursos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' por defecto
 
-const Recomendaciones = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://ip172-18-0-14-clnrprogftqg00ds0m90-5001.direct.labs.play-with-docker.com/cursos");
+        const data = await response.json();
+        const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
+        const cursosWithValoraciones = data.cursos.map(curso => {
+          return {
+            ...curso,
+            valoracion: storedValoraciones[curso.curso_id] || curso.valoracion
+          };
+        });
+        setCursos(cursosWithValoraciones);
+        filterAndSortCursos(cursosWithValoraciones);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filterAndSortCursos = (data) => {
+    let filteredCursos = data;
+
+    filteredCursos = filteredCursos.filter((curso) =>
+      curso.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (sortOrder === 'asc') {
+      filteredCursos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    } else {
+      filteredCursos.sort((a, b) => b.nombre.localeCompare(a.nombre));
+    }
+
+    setFilteredCursos([...filteredCursos]);
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    filterAndSortCursos(cursos);
+  };
+
+  const handleSortChange = () => {
+    const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newSortOrder);
+    filterAndSortCursos(cursos);
+  };
+
+  const handleStarClick = (cursoId, valoracion) => {
+    const updatedCursos = cursos.map(curso => {
+      if (curso.curso_id === cursoId) {
+        saveValoracionToLocalStorage(cursoId, valoracion);
+        return {
+          ...curso,
+          valoracion: valoracion
+        };
+      }
+      return curso;
+    });
+    setCursos(updatedCursos);
+    filterAndSortCursos(updatedCursos);
+  };
+
+  const saveValoracionToLocalStorage = (cursoId, valoracion) => {
+    const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
+    storedValoraciones[cursoId] = valoracion;
+    localStorage.setItem("valoraciones", JSON.stringify(storedValoraciones));
+  };
 
   return (
-
     <div className="todo">
-    <div className="nav">
-      <NavbarComponent />
-    </div>
-    <div className="cards">
-
-    <div className="promo-page">
-      <div className="promo mw-100" >
-        <div className="reco">
-        <Container style={{ marginTop: '20px' }}>
-          <Row>
-            <Col>
-              <h2 className="text-center fw-bold text-white">Recomendaciones principales</h2>
+      <NavbarComponent onSearch={handleSearch} onSortChange={handleSortChange} />
+      <div className="cards">
+        <Row xs={1} md={3} className="g-4">
+          {filteredCursos.map((curso) => (
+            <Col key={curso.curso_id}>
+              <Card>
+                <Card.Body>
+                  <Card.Title>{curso.nombre}</Card.Title>
+                  <Card.Text>
+                    Profesor: {curso.profesor}
+                    <br />
+                    Carrera: {curso.carrera}
+                    <br />
+                    Clase: {curso.clase}
+                    <br />
+                    Idioma: {curso.idioma}
+                    <br />
+                    Valoración: {renderStarRating(curso.curso_id, curso.valoracion)}
+                  </Card.Text>
+                </Card.Body>
+              </Card>
             </Col>
-          </Row>
-          <Row className="pricing">               
-            <Col lg={4}>
-              <div className="card mb-5 mb-lg-0">
-                <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                   
-                  </div>
-                </div>
-              </div>
-            </Col>
-            <Col lg={4}>
-              <div className="card mb-5 mb-lg-0">
-              <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                  </div>
-                </div>
-              </div>
-            </Col>
-            <Col lg={4}>
-              <div className="card mb-5 mb-lg-0">
-              <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </div>
-      </div>
-
-      <Container style={{ marginTop: '50px' }}>
-        <Row>
-          <Col>
-            <h2 className="text-center fw-bold">Porque te suscribiste a ... </h2>
-          </Col>
+          ))}
         </Row>
-        <Row className="pricing">               
-          <Col lg={4}>
-            <div className="card mb-5 mb-lg-0">
-            <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                  </div>
-                </div>
-            </div>
-          </Col>
-          <Col lg={4}>
-            <div className="card mb-5 mb-lg-0">
-            <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                  </div>
-                </div>
-            </div>
-          </Col>
-          <Col lg={4}>
-            <div className="card mb-5 mb-lg-0">
-            <div className="card-body">
-                  <h5 className="card-title text-muted text-uppercase text-center">Analisis de oro y Plata Fundicion</h5>
-                  <hr className="bg-dark border-2 border-top border-dark"></hr>
-                  <h6 className="fw-bold pb-2">Mecanica y Aviacion</h6>
-                  <p className="pb-5">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-                  </p>
-                  <div className="d-grid">
-                    <a href="#" className="btn btn-primary text-uppercase">Ver curso</a>
-                  </div>
-                </div>
-            </div>
-          </Col>
-        </Row>
-      </Container>
+      </div>
     </div>
-    </div>
-    </div>
-  )
+  );
+
+  function renderStarRating(cursoId, valoracion) {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <FaStar
+          key={i}
+          color={i <= valoracion ? '#ffc107' : '#e4e5e9'}
+          style={{ cursor: 'pointer' }}
+          onClick={() => handleStarClick(cursoId, i)}
+        />
+      );
+    }
+    return stars;
+  }
 }
-  
-  
-export default Recomendaciones
+
+export default Recomendaciones;

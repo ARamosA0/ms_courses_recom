@@ -3,16 +3,18 @@ import { Navigate } from 'react-router-dom';
 import './App.css';
 import localImage from './image/logo.png';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useAuth } from './AuthContext';  // Asegúrate de proporcionar la ruta correcta
 
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirectToDashboard, setRedirectToDashboard] = useState(false);
   const [redirectToCreateUser, setRedirectToCreateUser] = useState(false);
+  const { login } = useAuth();  // Obtén la función login del contexto
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://ip172-18-0-64-clnkkc4snmng008p6ii0-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
+      const response = await fetch('http://ip172-18-0-14-clnrprogftqg00ds0m90-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -21,18 +23,17 @@ function App() {
 
       if (response.ok) {
         const cuentas = await response.json();
-
-        // Verifica si las credenciales del usuario coinciden con alguna cuenta
         const cuentaEncontrada = cuentas.usuarios_cuentas.find(
           (cuenta) => cuenta.username === email && cuenta.password === password
         );
 
         if (cuentaEncontrada) {
-          console.log('Usuario autenticado con éxito');
-          // Aquí puedes redirigir al usuario a la página de dashboard
+          // Llama a la función de login del contexto
+          login(email, password);
+          // Después de la autenticación, redirige al usuario a la página de dashboard
           setRedirectToDashboard(true);
         } else {
-          alert('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+          setRedirectToDashboard(false);
         }
       } else {
         const data = await response.json();
@@ -44,12 +45,11 @@ function App() {
   };
 
   const handleCreateAccount = () => {
-    // Establece redirectToCreateUser a true para activar la redirección a la página de creación de usuarios
     setRedirectToCreateUser(true);
   };
 
-  // Usa Navigate en lugar de Redirect
   if (redirectToDashboard) {
+    // Redirige al usuario a la página de dashboard después de la autenticación
     return <Navigate to="/dashboard" />;
   }
 

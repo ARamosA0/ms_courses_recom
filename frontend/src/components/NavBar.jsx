@@ -1,4 +1,6 @@
+// NavBar.jsx
 import React, { useState } from 'react';
+import { useAuth } from '../AuthContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
@@ -8,9 +10,10 @@ import Button from 'react-bootstrap/Button';
 import './NavBar.css';
 
 function NavBar({ onSearch, onFilterChange, onSortChange }) {
+  const { isAuthenticated, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' por defecto
+  const [sortOrder, setSortOrder] = useState('asc');
 
   const handleSearchChange = (event) => {
     const value = event.target.value;
@@ -28,6 +31,11 @@ function NavBar({ onSearch, onFilterChange, onSortChange }) {
     const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
     setSortOrder(newSortOrder);
     onSortChange(newSortOrder);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
   };
 
   return (
@@ -51,15 +59,23 @@ function NavBar({ onSearch, onFilterChange, onSortChange }) {
                 value={searchTerm}
                 onChange={handleSearchChange}
               />
-              
               <Button variant="outline-success" onClick={handleSortChange}>
                 Sort {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
               </Button>
             </Form>
+            <div className="auth-indicator">
+              
+                <>
+                  <Button variant="outline-danger" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                </>
+              
+            </div>
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      <div className='espacio'></div>
+      <div className="espacio"></div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ function Table() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://ip172-18-0-64-clnkkc4snmng008p6ii0-5001.direct.labs.play-with-docker.com/cursos");
+        const response = await fetch("http://ip172-18-0-14-clnrprogftqg00ds0m90-5001.direct.labs.play-with-docker.com/cursos");
         const data = await response.json();
         const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
         const cursosWithValoraciones = data.cursos.map(curso => {
