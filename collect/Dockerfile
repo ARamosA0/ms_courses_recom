@@ -20,7 +20,7 @@ COPY . .
 RUN dotnet publish -c release -o /app -a $TARGETARCH --self-contained false --no-restore
 
 # app image
-FROM mcr.microsoft.com/dotnet/runtime:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "Worker.dll"]pp", "-b", "0.0.0.0:80", "--log-file", "-", "--access-logfile", "-", "--workers", "4", "--keep-alive", "0"]

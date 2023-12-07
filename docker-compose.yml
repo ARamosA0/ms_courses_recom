@@ -20,6 +20,8 @@ services:
     build: ./collect
     volumes:
       - ./collect:/usr/local/app
+    ports:
+      - "5003:83"
     environment:
       KAFKA_BROKER: kafka:9092
     networks:

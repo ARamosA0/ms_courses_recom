@@ -1,114 +1,40 @@
-using System;
-using System.Data.Common;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using Newtonsoft.Json;
-using Npgsql;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using StackExchange.Redis;
+using System;
 
-namespace Collect
+namespace MiProyecto
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static void Main(string[] args)
         {
             try
             {
-                var pgsql = OpenDbConnection("Server=db;Username=postgres;Password=postgres;");
-                var redisConn = OpenRedisConnection("redis");
+                var redisConn = OpenRedisConnection("172.23.0.3"); // Reemplazar con la dirección IP de Redis
                 var redis = redisConn.GetDatabase();
 
-                // Keep alive is not implemented in Npgsql yet. This workaround was recommended:
-                // https://github.com/npgsql/npgsql/issues/1214#issuecomment-235828359
-                var keepAliveCommand = pgsql.CreateCommand();
-                keepAliveCommand.CommandText = "SELECT 1";
-
-                var definition = new { vote = ""};
-                while (true)
+                if (redisConn != null && redisConn.IsConnected)
                 {
-                    // Slow down to prevent CPU spike, only query each 100ms
-                    Thread.Sleep(100);
+                    Console.WriteLine("Conexión con Redis establecida correctamente.");
+                    Console.WriteLine("API funcionando");
 
-                    // Reconnect redis if down
-                    if (redisConn == null || !redisConn.IsConnected) {
-                        Console.WriteLine("Reconnecting Redis");
-                        redisConn = OpenRedisConnection("redis");
-                        redis = redisConn.GetDatabase();
-                    }
-                    string json = redis.ListLeftPopAsync("distancia").Result;
-                   // Console.WriteLine(json);
-                    if (json != null)
-                    {
-                        Console.WriteLine(json);
-                        // Reconnect DB if down
-                        if (!pgsql.State.Equals(System.Data.ConnectionState.Open))
-                        {
-                            Console.WriteLine("Reconnecting DB");
-                            pgsql = OpenDbConnection("Server=db;Username=postgres;Password=postgres;");
-                        }
-                        else
-                        { // Normal +1 vote requested
-                          
-                            Console.WriteLine(json);
-                            UploadPostgres(pgsql, json);
-                        }
-                    }
-                    else
-                    {
-                        keepAliveCommand.ExecuteNonQuery();
-                    }
+                    CreateWebHostBuilder(args, redis).Build().Run();
+                }
+                else
+                {
+                    Console.WriteLine("No se pudo conectar a Redis.");
                 }
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine(ex.ToString());
-                return 1;
             }
         }
 
-        private static NpgsqlConnection OpenDbConnection(string connectionString)
+        private static ConnectionMultiplexer OpenRedisConnection(string ipAddress)
         {
-            NpgsqlConnection connection;
-
-            while (true)
-            {
-                try
-                {
-                    connection = new NpgsqlConnection(connectionString);
-                    connection.Open();
-                    break;
-                }
-                catch (SocketException)
-                {
-                    Console.Error.WriteLine("Waiting for db");
-                    Thread.Sleep(1000);
-                }
-                catch (DbException)
-                {
-                    Console.Error.WriteLine("Waiting for db");
-                    Thread.Sleep(1000);
-                }
-            }
-
-            Console.Error.WriteLine("Connected to db");
-
-            var command = connection.CreateCommand();
-            command.CommandText = @"CREATE TABLE IF NOT EXISTS votes (
-                                        vote VARCHAR(255) NOT NULL
-                                    )";
-            command.ExecuteNonQuery();
-
-            return connection;
-        }
-
-        private static ConnectionMultiplexer OpenRedisConnection(string hostname)
-        {
-            // Use IP address to workaround https://github.com/StackExchange/StackExchange.Redis/issues/410
-            var ipAddress = GetIp(hostname);
-            Console.WriteLine($"Found redis at {ipAddress}");
-
             while (true)
             {
                 try
@@ -119,41 +45,36 @@ namespace Collect
                 catch (RedisConnectionException)
                 {
                     Console.Error.WriteLine("Waiting for redis");
-                    Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(1000);
                 }
             }
         }
 
-        private static string GetIp(string hostname)
-            => Dns.GetHostEntryAsync(hostname)
-                .Result
-                .AddressList
-                .First(a => a.AddressFamily == AddressFamily.InterNetwork)
-                .ToString();
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args, IDatabase redis)
+        {
+            return new WebHostBuilder()
+                .UseKestrel()
+                .Configure(app =>
+                {
+                    app.UseRouting();
 
-        private static void UploadPostgres(NpgsqlConnection connection, string data){
-          var command = connection.CreateCommand();
-            try
-            {
-                command.CommandText = "INSERT INTO votes ( vote) VALUES ( @vote)";
-                command.Parameters.AddWithValue("@vote", data);
-                Console.WriteLine(data);
-                command.ExecuteNonQuery();
-            }
-            catch (DbException ex)
-            {
-                Console.WriteLine("No se puede ");
-                Console.WriteLine("Database Exception:");
-            Console.WriteLine($"Message: {ex.Message}");
-            Console.WriteLine($"Source: {ex.Source}");
-            Console.WriteLine($"ErrorCode: {ex.ErrorCode}");
-            }
-            finally
-            {
-                command.Dispose();
-            }
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapGet("/", async context =>
+                        {
+                            await context.Response.WriteAsync("{\"message\":\"API funcionando\"}");
+                        });
 
+                        endpoints.MapPost("/process", async context =>
+                        {
+                            // Lógica para manejar la solicitud POST en la ruta /process
+                            // Por ejemplo, obtener datos del cuerpo de la solicitud y procesarlos
+                            // Ejemplo de respuesta con un mensaje JSON
+                            await context.Response.WriteAsync("{\"message\":\"Datos procesados correctamente\"}");
+                        });
+                    });
+                })
+                .UseUrls("http://*:5003");
         }
-        
     }
 }
