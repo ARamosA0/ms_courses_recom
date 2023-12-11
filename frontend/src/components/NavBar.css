@@ -9,3 +9,40 @@
     padding-top: 56px; /* La misma altura que el Navbar */
   }
   
+  /* NavBar.css */
+.navbar-nav .nav-link.active {
+  background-color: #ececec; /* Color plomo (puedes ajustar este valor) */
+  color: #000000; /* Color del texto en la pestaña activa (puedes ajustar este valor) */
+  border-radius: 5px; /* Bordes redondeados para el rectángulo */
+  padding: 5px 15px; /* Espaciado interno para el rectángulo */
+}
+#nav{
+  background-color: white;
+}
+/* NavBar.css */
+.navbar {
+  background-color: #ffffff; /* Color blanco para el fondo del Navbar */
+}
+
+/* NavBar.css */
+
+/* Otras reglas de estilo existentes */
+
+.vertical-line {
+  height: 30px; /* Ajusta la altura de la línea según sea necesario */
+  border-left: 1px solid #ccc; /* Ajusta el color y el estilo de la línea según sea necesario */
+  margin: 5px 0 0 0; /* Ajusta el espacio alrededor de la línea según sea necesario */
+}
+
+/* Otras reglas de estilo existentes */
+.nav-link {
+  margin-bottom: 0px; /* Ajusta el valor según sea necesario para agregar más separación entre los enlaces */
+  margin-right: 50px;
+}
+
+.vertical-line {
+  height: 30px; /* Ajusta la altura de la línea según sea necesario */
+  border-left: 1px solid #ccc; /* Ajusta el color y el estilo de la línea según sea necesario */
+  margin: 12px 10px; /* Ajusta la posición vertical y el espacio alrededor de la línea según sea necesario */
+  display: inline-block; /* Permite que la línea tenga un tamaño específico y se posicione correctamente */
+}

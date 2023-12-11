@@ -5,6 +5,8 @@
   flex-direction: column;
   height: 100vh;
   position: relative; /* Agregamos position: relative para que z-index funcione correctamente */
+  background-image: none;
+  background-color: rgb(240, 240, 240);
 }
 
 .nav {
@@ -19,3 +21,4 @@
   padding: 20px;
   z-index: 1; /* Asignamos un z-index menor al contenido para estar debajo del Navbar */
 }
+

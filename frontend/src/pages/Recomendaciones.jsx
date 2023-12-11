@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { FaStar } from 'react-icons/fa';
 import "./Course.css";
+import Container from 'react-bootstrap/Container';
 
 function Recomendaciones() {
   const [cursos, setCursos] = useState([]);
@@ -16,7 +17,7 @@ function Recomendaciones() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://ip172-18-0-13-clr0h9mfml8g00ck4d3g-5001.direct.labs.play-with-docker.com/cursos");
+        const response = await fetch("http://ip172-18-0-30-clr6qjcsnmng00drrcc0-5001.direct.labs.play-with-docker.com/cursos");
         const data = await response.json();
         const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
         const cursosWithValoraciones = data.cursos.map(curso => {
@@ -87,11 +88,12 @@ function Recomendaciones() {
     <div className="todo">
       <NavbarComponent onSearch={handleSearch} onSortChange={handleSortChange} />
       <div className="cards">
-        <Row xs={1} md={3} className="g-4">
+      <Container className="container-margin">
+        <Row xs={1} lg={4} className="g-4">
           {filteredCursos.map((curso) => (
             <Col key={curso.curso_id}>
-              <Card>
-              <Card.Img variant="top" src='http://blog.tecsupvirtual.edu.pe/wp-content/uploads/2018/05/canvas_plataforma_educacion_virtual_tecsup_1.jpg' />
+              <Card className="card-small">
+                <Card.Img variant="top" src='http://blog.tecsupvirtual.edu.pe/wp-content/uploads/2018/05/canvas_plataforma_educacion_virtual_tecsup_1.jpg' />
                 <Card.Body>
                   <Card.Title>{curso.nombre}</Card.Title>
                   <Card.Text>
@@ -110,6 +112,7 @@ function Recomendaciones() {
             </Col>
           ))}
         </Row>
+        </Container>
       </div>
     </div>
   );

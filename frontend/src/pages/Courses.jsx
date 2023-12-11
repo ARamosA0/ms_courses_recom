@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import NavbarComponent from '../components/NavBar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Card from 'react-bootstrap/Card';
@@ -18,7 +18,7 @@ function Table() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://ip172-18-0-13-clr0h9mfml8g00ck4d3g-5001.direct.labs.play-with-docker.com/cursos");
+        const response = await fetch("http://ip172-18-0-30-clr6qjcsnmng00drrcc0-5001.direct.labs.play-with-docker.com/cursos");
         const data = await response.json();
         const storedValoraciones = JSON.parse(localStorage.getItem("valoraciones")) || {};
         const cursosWithValoraciones = data.cursos.map(curso => {
@@ -104,6 +104,8 @@ function Table() {
   return (
     <div className="todo">
       <NavbarComponent onSearch={handleSearch} onSortChange={handleSortChange} />
+
+
       <div className="filter">
         <Form.Group controlId="formCarrera">
           <Form.Label>Filtrar por Carrera:</Form.Label>
@@ -115,6 +117,7 @@ function Table() {
           </Form.Control>
         </Form.Group>
       </div>
+
       <div className="cards">
         <Row xs={1} md={3} className="g-4">
           {filteredCursos.map((curso) => (

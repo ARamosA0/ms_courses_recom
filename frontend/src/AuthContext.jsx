@@ -1,31 +1,28 @@
 // AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => JSON.parse(localStorage.getItem('isAuthenticated')) || false
-  );
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || null);
 
   useEffect(() => {
-    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
-  }, [isAuthenticated]);
+    localStorage.setItem('user', JSON.stringify(user));
+  }, [user]);
 
-  const login = () => {
-    // Lógica de autenticación aquí...
-    setIsAuthenticated(true);
+  const login = (userData) => {
+    setUser({
+      name: userData.email, // Asigna el email como nombre del usuario
+      // Otros campos del usuario si es necesario
+    });
   };
 
   const logout = () => {
-    // Lógica de cierre de sesión aquí...
-    setIsAuthenticated(false);
+    setUser(null);
   };
 
-  console.log('Estado de autenticación:', isAuthenticated);
-
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,10 +1,29 @@
-/* Recomendaciones.css */
+/* Course.css */
 
-  .reco {
-    background-color: #424242;
-    width: 100%; /* Ocupa todo el ancho de su contenedor */
-    /* Ajusta cualquier otro estilo que desees aplicar específicamente al div con la clase "reco" */
-  }
-  
-  /* Agrega cualquier otra regla de estilo necesaria según tus necesidades */
-  
+.todo {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative; /* Agregamos position: relative para que z-index funcione correctamente */
+}
+
+.nav {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-bottom: 1px solid #dee2e6;
+  z-index: 1000; /* Ajustamos z-index para asegurar que el Navbar esté en la parte superior */
+}
+
+.cards {
+  flex-grow: 1;
+  padding: 20px;
+  z-index: 1; /* Asignamos un z-index menor al contenido para estar debajo del Navbar */
+}
+
+.card-small {
+  width: 250px; /* Ajusta el ancho según tus necesidades */
+  margin: 10px; /* Ajusta el margen según tus necesidades */
+}
+*{
+  background-image: none;
+}
