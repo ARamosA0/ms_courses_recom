@@ -1,5 +1,4 @@
-// Login.jsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import './Login.css';
 import localImage from '../image/logo.png';
@@ -15,14 +14,33 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      // Lógica de autenticación aquí...
-      const userData = {
-        email: email, // Puedes usar el email como el nombre del usuario
-        // Otros campos del usuario si es necesario
-      };
+      const response = await fetch(
+        'http://ip172-18-0-47-clridamfml8g009ce570-5002.direct.labs.play-with-docker.com/usuarios_cuentas'
+      );
 
-      login(userData);
-      setRedirectToDashboard(true);
+      if (!response.ok) {
+        throw new Error('Error al obtener datos de la API');
+      }
+
+      const data = await response.json();
+      const user = data.usuarios_cuentas.find(
+        (u) => u.username === email && u.password === password
+      );
+
+      if (user) {
+        // Lógica de autenticación exitosa
+        const userData = {
+          email: user.username,
+          // Otros campos del usuario si es necesario
+        };
+
+        login(userData);
+        setRedirectToDashboard(true);
+      } else {
+        // Lógica para manejar credenciales incorrectas
+        console.error('Credenciales incorrectas');
+        alert('Credenciales incorrectas. Verifica tu email y contraseña.');
+      }
     } catch (error) {
       console.error('Error al autenticar:', error);
     }
