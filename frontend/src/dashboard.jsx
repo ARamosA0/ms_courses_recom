@@ -1,19 +1,14 @@
-//import Table from "./pages/Table";
-//import Menu from "./pages/menu/Menu";
-//import Courses from "./pages/Courses";
+// dashboard.jsx
+import React from 'react';
 import NavbarComponent from './components/NavBar';
 
-
-function App() {
-
+function Dashboard() {
   return (
     <div>
-    
-    <NavbarComponent/>
-
+      <NavbarComponent />
+      {/* El resto de tu contenido del dashboard */}
     </div>
-    
-  )
+  );
 }
 
-export default App
+export default Dashboard;

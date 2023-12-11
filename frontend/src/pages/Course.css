@@ -1,19 +1,24 @@
-/* Table.css */
+/* Course.css */
 
 .todo {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Ajusta la altura total según tus necesidades */
-  }
-  
-  .nav {
-    background-color: #f8f9fa; /* Color de fondo del nav */
-    padding: 10px; /* Ajusta el espacio interno según tus necesidades */
-    border-bottom: 1px solid #dee2e6; /* Línea divisoria inferior */
-  }
-  
-  .cards {
-    flex-grow: 1; /* Ocupa el espacio restante */
-    padding: 20px; /* Ajusta el espacio interno según tus necesidades */
-  }
-  
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative; /* Agregamos position: relative para que z-index funcione correctamente */
+  background-image: none;
+  background-color: rgb(240, 240, 240);
+}
+
+.nav {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-bottom: 1px solid #dee2e6;
+  z-index: 1000; /* Ajustamos z-index para asegurar que el Navbar esté en la parte superior */
+}
+
+.cards {
+  flex-grow: 1;
+  padding: 20px;
+  z-index: 1; /* Asignamos un z-index menor al contenido para estar debajo del Navbar */
+}
+
