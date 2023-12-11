@@ -15,7 +15,7 @@ function CreateUser() {
   const handleCreateUserAndCuenta = async () => {
     try {
       // Crear usuario
-      const userResponse = await fetch('http://ip172-18-0-30-clr6qjcsnmng00drrcc0-5002.direct.labs.play-with-docker.com/usuarios', {
+      const userResponse = await fetch('http://ip172-18-0-47-clridamfml8g009ce570-5002.direct.labs.play-with-docker.com/usuarios', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ function CreateUser() {
       const { usuario_id } = await userResponse.json();
   
       // Crear cuenta de usuario
-      const cuentaResponse = await fetch('http://ip172-18-0-30-clr6qjcsnmng00drrcc0-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
+      const cuentaResponse = await fetch('http://ip172-18-0-47-clridamfml8g009ce570-5002.direct.labs.play-with-docker.com/usuarios_cuentas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
