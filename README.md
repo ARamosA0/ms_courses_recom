@@ -21,7 +21,8 @@ Link de repositorio usado para el procesamiento de datos
 
 La api esta en una instancia ES2 en AWS 
 
-[LINK](52.90.25.69:5000)
+[LINK](http://52.90.25.69:5000)
+[LINK2](http://ec2-52-90-25-69.compute-1.amazonaws.com/)
 
 ## **DOCKER SWARM**
 ```shell
