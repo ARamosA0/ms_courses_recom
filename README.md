@@ -23,10 +23,6 @@ La api esta en una instancia ES2 en AWS
 
 [LINK](http://52.90.25.69:5000)
 
-[LINK2](http://ec2-52-90-25-69.compute-1.amazonaws.com/)
-
-
-
 - Con [http://52.90.25.69:5000/data](http://52.90.25.69:5000/data) cargamos la data,
 - Con [http://52.90.25.69:5000/45600](http://52.90.25.69:5000/45600) Vemos la data
 - Podemos cambiar el id final para probar otros usuarios
