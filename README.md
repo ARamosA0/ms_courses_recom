@@ -1,4 +1,21 @@
-# **ARQUITECTURA DE MS CON KAFKA**
+# **ARQUITECTURA DE MS**
+
+## **Despliege con Docker compose**
+
+Para desplegar en docker play, es necesario cambiar los links de las apis en los archivos del frontend 
+-  api.jsx
+-  Courses.jsx
+-  CreateUser.jsx
+-  Login.jsx
+-  Recomendaciones.jsx
+
+```shell
+docker compose up -d
+```
+
+Link de repositorio usado para el procesamiento de datos
+[https://github.com/ARamosA0/img-docker-20m]
+
 
 ## **DOCKER SWARM**
 ```shell
