@@ -16,9 +16,12 @@ docker compose up -d
 ## **Api de recomendacion**
 
 Link de repositorio usado para el procesamiento de datos
+
 [REPO](https://github.com/ARamosA0/img-docker-20m)
 
 La api esta en una instancia ES2 en AWS 
+
+[LINK](52.90.25.69:5000)
 
 ## **DOCKER SWARM**
 ```shell
