@@ -36,6 +36,7 @@ docker stack deploy --compose-file docker-stack.yml recomend
 
 - [Diagramas](https://miro.com/welcomeonboard/a3dXYmtpaVpZcVhzaWNWaDZlYUVEd1dvS2I0SFVlekhwbGkxdlJnUE9sVEgxWFczb0FDZW56WVdFR2VYajltdnwzNDU4NzY0NTM0Mjk4NTg0NjA0fDI=?share_link_id=519012505508)
 
+- [IMAGEN](https://github.com/ARamosA0/ms_courses_recom/blob/main/diagrama.jpg)
 ## **Figma**
 
 - [Front](https://www.figma.com/proto/Ot6bc82rw3QlpVmaINKZms/UI-Design-System-Recomendation?type=design&node-id=49-422&t=pK2g5gepaGibhshK-0&scaling=scale-down&page-id=0%3A1)
