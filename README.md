@@ -13,9 +13,12 @@ Para desplegar en docker play, es necesario cambiar los links de las apis en los
 docker compose up -d
 ```
 
-Link de repositorio usado para el procesamiento de datos
-[https://github.com/ARamosA0/img-docker-20m]
+## **Api de recomendacion**
 
+Link de repositorio usado para el procesamiento de datos
+[REPO](https://github.com/ARamosA0/img-docker-20m)
+
+La api esta en una instancia ES2 en AWS 
 
 ## **DOCKER SWARM**
 ```shell
